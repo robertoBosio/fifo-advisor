@@ -1,0 +1,14 @@
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+skip_gitignore = true
+
+
+[tool.black]
+line-length = 88
+preview = true
+
+
+[tool.ruff]
+line-length = 88
