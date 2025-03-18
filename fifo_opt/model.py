@@ -40,8 +40,9 @@ def eval_solution(x: np.ndarray) -> float:
 
 
 class FIFOOptimizer(ABC):
-    def __init__(self, name: str):
+    def __init__(self, name: str, min_fifo_size: int = 2):
         self.name = name
+        self.min_fifo_size = min_fifo_size
 
     @abstractmethod
     def solve(self, fifo_metadata: dict, target_latency: int) -> list:
@@ -66,7 +67,7 @@ class BayesianOptimizer(FIFOOptimizer):
 class SimulatedAnnealingOptimizer(FIFOOptimizer):
     def __init__(self, name: str, round_type: ROUND_TYPE = ROUND_TYPE.RINT):
         super().__init__(name)
-        self.round_type = round_type
+        self.round_type = round_type 
 
     def solve(self, fifo_metadata: dict, target_latency: int) -> list:
         n = fifo_metadata["n_fifos"]
@@ -128,6 +129,9 @@ class ScipyMinimizeOptimizer(FIFOOptimizer):
             options=self.scipy_optimizer_options,
         )
 
+        x_sol = result.x
+        return x_sol
+
 
 # There will probably be many "heuristic" optimizers.
 # For example, we could have a "greedy" optimizer
@@ -138,7 +142,7 @@ class HuristicOptimizer(FIFOOptimizer):
 
 
 class RandomOptimizer(FIFOOptimizer):
-    def __init__(self, name: str, n_samples: int, n_chosen: int, upper_bound: int):
+    def __init__(self, name: str, n_samples: int, upper_bound: int):
         super().__init__(name)
         self.n_samples = n_samples
         # TODO need a principled way to pick an upper bound for the sampled values
@@ -156,58 +160,60 @@ class RandomOptimizer(FIFOOptimizer):
         y = eval_solution(x)
         sorted_indices = np.argsort(y)
         x_sorted = x[sorted_indices]
-        x_chosen = x_sorted[: self.n_chosen]
+        
+        
         raise NotImplementedError
 
 
-class FIFOOptimizerRuntime:
-    def __init__(
-        self,
-        initial_fifo_data: list,
-        optimizers: list[FIFOOptimizer],
-        min_fifo_size: int = 2,
-    ):
-        self.initial_fifo_data = initial_fifo_data
-        self.optimizers = optimizers
-        self.min_fifo_size = min_fifo_size
+# class FIFOOptimizerRuntime:
+#     def __init__(
+#         self,
+#         initial_fifo_data: list,
+#         optimizers: list[FIFOOptimizer],
+#         min_fifo_size: int = 2,
+#     ):
+#         self.initial_fifo_data = initial_fifo_data
+#         self.optimizers = optimizers
+#         self.min_fifo_size = min_fifo_size
 
-    @cached_property
-    def fifo_ids(self):
-        pass
+#     @cached_property
+#     def fifo_ids(self):
+#         pass
 
-    @cached_property
-    def n_fifo(self):
-        return len(self.fifo_ids)
+#     @cached_property
+#     def n_fifo(self):
+#         return len(self.fifo_ids)
 
-    @cached_property
-    def fifo_metadata(self):
-        return {
-            "n_fifos": self.n_fifo,
-            "fifo_ids": self.fifo_ids,
-            "min_fifo_size": self.min_fifo_size,
-        }
+#     @cached_property
+#     def fifo_metadata(self):
+#         return {
+#             "n_fifos": self.n_fifo,
+#             "fifo_ids": self.fifo_ids,
+#             "min_fifo_size": self.min_fifo_size,
+#         }
+    
 
-    def compute_unconstrained_latency(self) -> float:
-        pass
+#     def compute_unconstrained_latency(self) -> float:
+#         pass
 
-    def run_latency_minimal(self):
-        solutions: {str: list} = {}
-        for optimizer in self.optimizers:
-            solver_solutions = optimizer.solve(self.fifo_metadata, 0.0)
-            solutions[optimizer.name] = solver_solutions
-        return solutions
+#     def run_latency_minimal(self):
+#         solutions: {str: list} = {}
+#         for optimizer in self.optimizers:
+#             solver_solutions = optimizer.solve(self.fifo_metadata, 0.0)
+#             solutions[optimizer.name] = solver_solutions
+#         return solutions
 
-    def run_latency_frontier(self, n_points: int):
-        # crate a log scale of latency targets from the minimal found
+#     def run_latency_frontier(self, n_points: int):
+#         # crate a log scale of latency targets from the minimal found
 
-        # min_latency = self.compute_unconstrained_latency()
-        min_latency = 1e-6  # TODO: switch to compute_unconstrained_latency when ready
-        max_latency = self.compute_latency(self.min_fifo_size)
+#         # min_latency = self.compute_unconstrained_latency()
+#         min_latency = 1e-6  # TODO: switch to compute_unconstrained_latency when ready
+#         max_latency = self.compute_latency(self.min_fifo_size)
 
-        latency_targets = np.logspace(
-            start=np.log10(min_latency),
-            stop=np.log10(max_latency),
-            base=10,
-            num=n_points,
-            endpoint=True,
-        )
+#         latency_targets = np.logspace(
+#             start=np.log10(min_latency),
+#             stop=np.log10(max_latency),
+#             base=10,
+#             num=n_points,
+#             endpoint=True,
+#         )
