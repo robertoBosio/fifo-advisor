@@ -208,6 +208,33 @@ class TestCase:
             print(p.stdout)
             print(p.stderr)
             p.check_returncode()
+
+    @property
+    def has_solution_dir(self):
+        # find the dir prefixed with hls_
+        hls_dir_matches = [dir for dir in self.dir.glob("hls_*") if dir.is_dir()]
+        if len(hls_dir_matches) == 0:
+            return False
+        if len(hls_dir_matches) > 1:
+            raise ValueError(f"Found more than one hls dir in {self.dir}")
+        
+        hls_dir: Path = hls_dir_matches[0]
+        solution_dir_path = hls_dir / "solution1"
+        
+        if not solution_dir_path.exists():
+            return False
+        
+        return True
+    
+    @property
+    def solution_dir(self):
+        if not self.has_solution_dir:
+            raise ValueError(f"No solution dir found in {self.dir}")
+        hls_dir_matches = [dir for dir in self.dir.glob("hls_*") if dir.is_dir()]
+        hls_dir: Path = hls_dir_matches[0]
+        solution_dir_path = hls_dir / "solution1"
+        return solution_dir_path
+
     
     def run_lightning_sim(self):
         raise NotImplementedError

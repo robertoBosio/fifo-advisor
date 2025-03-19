@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from fifo_opt.solvers import GridSearchOptimizer
+from fifo_opt.solvers import RandomSearchOptimizer
 
 
 def main(args):
@@ -16,7 +16,7 @@ def main(args):
 
     # 3. Provide the user with the results via logging, files, or a web interface.
 
-    optimizer = GridSearchOptimizer(solution_dir)
+    optimizer = RandomSearchOptimizer(solution_dir)
     optimizer.solve()
 
 
