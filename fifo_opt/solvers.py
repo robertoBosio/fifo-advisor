@@ -36,7 +36,21 @@ def round(x: np.ndarray, round_type: ROUND_TYPE) -> np.ndarray:
             raise ValueError(f"Unknown rounding type: {round_type}")
 
 
+class GridSearchOptimizer(FIFOOptimizer):
+    def solve(self) -> dict[int, int]:
+        fifos_dse_space = {}
+        for fifo in self.fifos:
+            fifo_id = fifo.id
+            fifo_depths = self.trace_base.compiled.get_fifo_design_space([fifo_id], fifo.width)
+            fifos_dse_space[fifo_id] = fifo_depths
 
+        print(fifos_dse_space)
+
+        raise NotImplementedError
+        
+        
+
+    
 
 class GAOptimizer(FIFOOptimizer):
     def solve(self, fifo_metadata: dict, target_latency: int) -> list:
@@ -120,6 +134,7 @@ class ScipyMinimizeOptimizer(FIFOOptimizer):
 
         x_sol = result.x
         return x_sol
+
 
 
 # There will probably be many "heuristic" optimizers.

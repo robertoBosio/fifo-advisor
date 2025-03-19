@@ -31,8 +31,10 @@ class FIFOOptimizer(ABC):
         self.runner.steps[RunnerStep.PARSING_SCHEDULE_DATA].on_start(lambda _: print("Parsing schedule data from C synthesis..."))
         self.runner.steps[RunnerStep.RESOLVING_TRACE].on_start(lambda _: print("Resolving dynamic schedule from trace..."));
     
-        self.trace_base: ResolvedTrace = asyncio.run(self.runner.run())
-        
+        self.trace_base = asyncio.run(self.runner.run())
+        self.simulation_base = self.trace_base.compiled.execute(self.trace_base.params)
+
+
         self.fifos = self.trace_base.fifos
         self.num_fifos = len(self.trace_base.fifos)
 
@@ -51,5 +53,5 @@ class FIFOOptimizer(ABC):
         raise NotImplementedError
         
     @abstractmethod
-    def solve(self, fifo_metadata: dict, target_latency: int) -> list:
-        raise NotImplementedError
+    def solve(self) -> dict[int, int]:
+        ...

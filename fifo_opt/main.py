@@ -1,6 +1,8 @@
 import argparse
 from pathlib import Path
 
+from fifo_opt.solvers import GridSearchOptimizer
+
 
 def main(args):
     solution_dir: Path = args.solution_dir
@@ -13,6 +15,10 @@ def main(args):
     # 2. Run optimization algorithms to find FIFO depth soltuions
 
     # 3. Provide the user with the results via logging, files, or a web interface.
+
+    optimizer = GridSearchOptimizer(solution_dir)
+    optimizer.solve()
+
 
 
 if __name__ == "__main__":
