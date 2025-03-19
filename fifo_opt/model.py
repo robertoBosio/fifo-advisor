@@ -6,6 +6,8 @@ from functools import cached_property
 import numpy as np
 from scipy.optimize import Bounds, dual_annealing, minimize
 
+from fifo_opt.opt_env import FIFOOptimizer
+
 
 class ROUND_TYPE(enum.Enum):
     FLOOR = enum.auto()
@@ -34,19 +36,6 @@ def round(x: np.ndarray, round_type: ROUND_TYPE) -> np.ndarray:
             raise ValueError(f"Unknown rounding type: {round_type}")
 
 
-def eval_solution(x: np.ndarray) -> float:
-    # TODO: call lightningsim with the fifo depths in x
-    return 0.0
-
-
-class FIFOOptimizer(ABC):
-    def __init__(self, name: str, min_fifo_size: int = 2):
-        self.name = name
-        self.min_fifo_size = min_fifo_size
-
-    @abstractmethod
-    def solve(self, fifo_metadata: dict, target_latency: int) -> list:
-        pass
 
 
 class GAOptimizer(FIFOOptimizer):
