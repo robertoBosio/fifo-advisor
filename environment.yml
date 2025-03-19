@@ -1,0 +1,15 @@
+name: fifo-opt
+channels:
+  - conda-forge
+  - https://sharc-lab.github.io/LightningSim/repo
+dependencies:
+  - python=3.11
+  - lightningsim
+  - numpy
+  - pandas
+  - matplotlib
+  - seaborn
+  - scipy
+  - pymoo
+  - ruff
+  - mypy

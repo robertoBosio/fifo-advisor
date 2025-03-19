@@ -4,50 +4,48 @@
 // Automatically generated file for High-level Synthesis (HLS).
 //
 //===----------------------------------------------------------------------===//
-#include <hls_stream.h>
-#include <hls_half.h>
 #include <cassert>
+#include <hls_half.h>
 #include <hls_math.h>
+#include <hls_stream.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
 using namespace std;
 
-void node0(
-  hls::stream<float> &v0,
-  float v1[180][210]
-) {
-  loop0: for (int v2 = 0; v2 < 210; v2++) {
-    loop1: for (int v3 = 0; v3 < 180; v3++) {
-      #pragma HLS pipeline II=1
-      #pragma HLS loop_flatten
+void node0(hls::stream<float> &v0, float v1[180][210]) {
+loop0:
+  for (int v2 = 0; v2 < 210; v2++) {
+  loop1:
+    for (int v3 = 0; v3 < 180; v3++) {
+#pragma HLS pipeline II = 1
+#pragma HLS loop_flatten
       float v4 = v0.read();
       v1[v3][v2] = v4;
     }
   }
-  return ;
+  return;
 }
 
-void node1(
-  hls::stream<float> &v5,
-  hls::stream<float> &v6,
-  hls::stream<float> &v7,
-  float v8
-) {
+void node1(hls::stream<float> &v5, hls::stream<float> &v6,
+           hls::stream<float> &v7, float v8) {
   float v9[180][210];
   float v10;
-  float v11[190];
-  loop2: for (int v12 = 0; v12 < 190; v12++) {
-    loop3: for (int v13 = 0; v13 < 210; v13++) {
-      loop4: for (int v14 = 0; v14 < 180; v14++) {
-        #pragma HLS pipeline II=1
-        #pragma HLS loop_flatten
+  float v11[180];
+loop2:
+  for (int v12 = 0; v12 < 190; v12++) {
+  loop3:
+    for (int v13 = 0; v13 < 210; v13++) {
+    loop4:
+      for (int v14 = 0; v14 < 180; v14++) {
+#pragma HLS pipeline II = 1
+#pragma HLS loop_flatten
         if (v13 == 0) {
           float v15 = v5.read();
-          v11[v12] = v15;
+          v11[v14] = v15;
         }
-        float v16 = v11[v12];
+        float v16 = v11[v14];
         if (v14 == 0) {
           float v17 = v6.read();
           v10 = v17;
@@ -67,21 +65,20 @@ void node1(
       }
     }
   }
-  return ;
+  return;
 }
 
-void node2(
-  float v23[190][220],
-  float v24[220][210],
-  hls::stream<float> &v25,
-  float v26
-) {
+void node2(float v23[190][220], float v24[220][210], hls::stream<float> &v25,
+           float v26) {
   float v27[190][210];
-  loop5: for (int v28 = 0; v28 < 190; v28++) {
-    loop6: for (int v29 = 0; v29 < 220; v29++) {
-      loop7: for (int v30 = 0; v30 < 210; v30++) {
-        #pragma HLS pipeline II=1
-        #pragma HLS loop_flatten
+loop5:
+  for (int v28 = 0; v28 < 190; v28++) {
+  loop6:
+    for (int v29 = 0; v29 < 220; v29++) {
+    loop7:
+      for (int v30 = 0; v30 < 210; v30++) {
+#pragma HLS pipeline II = 1
+#pragma HLS loop_flatten
         float v31 = v23[v28][v29];
         float v32 = v24[v29][v30];
         if (v29 == 0) {
@@ -98,21 +95,20 @@ void node2(
       }
     }
   }
-  return ;
+  return;
 }
 
-void node3(
-  float v37[180][200],
-  float v38[200][190],
-  hls::stream<float> &v39,
-  float v40
-) {
+void node3(float v37[180][200], float v38[200][190], hls::stream<float> &v39,
+           float v40) {
   float v41[180][190];
-  loop8: for (int v42 = 0; v42 < 190; v42++) {
-    loop9: for (int v43 = 0; v43 < 200; v43++) {
-      loop10: for (int v44 = 0; v44 < 180; v44++) {
-        #pragma HLS pipeline II=1
-        #pragma HLS loop_flatten
+loop8:
+  for (int v42 = 0; v42 < 190; v42++) {
+  loop9:
+    for (int v43 = 0; v43 < 200; v43++) {
+    loop10:
+      for (int v44 = 0; v44 < 180; v44++) {
+#pragma HLS pipeline II = 1
+#pragma HLS loop_flatten
         float v45 = v37[v44][v43];
         float v46 = v38[v43][v42];
         if (v43 == 0) {
@@ -129,27 +125,21 @@ void node3(
       }
     }
   }
-  return ;
+  return;
 }
 
-void forward(
-  float v51[180][200],
-  float v52[200][190],
-  float v53[190][220],
-  float v54[220][210],
-  float v55[180][210]
-) {
-	#pragma HLS DATAFLOW
+void forward(float v51[180][200], float v52[200][190], float v53[190][220],
+             float v54[220][210], float v55[180][210]) {
+#pragma HLS DATAFLOW
   hls::stream<float> v56("fifo_0");
-	#pragma HLS STREAM variable=v56 depth=37800
+#pragma HLS STREAM variable = v56 depth = 37800
   hls::stream<float> v57("fifo_1");
-	#pragma HLS STREAM variable=v57 depth=39900
+#pragma HLS STREAM variable = v57 depth = 39900
   hls::stream<float> v58("fifo_2");
-	#pragma HLS STREAM variable=v58 depth=34200
+#pragma HLS STREAM variable = v58 depth = 34200
   node3(v51, v52, v58, 0.000000);
   node2(v53, v54, v57, 0.000000);
   node1(v58, v57, v56, 0.000000);
   node0(v56, v55);
-  return ;
+  return;
 }
-

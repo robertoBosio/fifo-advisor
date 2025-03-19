@@ -20,7 +20,6 @@ def main(args):
     optimizer.solve()
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="fifo_opt",
