@@ -1,13 +1,13 @@
 import enum
+import random
 from abc import ABC, abstractmethod
 from enum import Enum
 from functools import cached_property
-import random
 
 import numpy as np
 from scipy.optimize import Bounds, dual_annealing, minimize
 
-from fifo_opt.opt_env import FIFOOptimizer
+from fifo_opt.opt_env import EvalResult, FIFOOptimizer
 
 
 class ROUND_TYPE(enum.Enum):
@@ -38,18 +38,20 @@ def round(x: np.ndarray, round_type: ROUND_TYPE) -> np.ndarray:
 
 
 class RandomSearchOptimizer(FIFOOptimizer):
-    def __init__(self, *args, n_samples: int = 100, seed: int=7, **kwargs):
+    def __init__(self, *args, n_samples: int = 100, seed: int = 7, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.n_samples = n_samples
         self.seed = seed
         self.r = random.Random(seed)
 
-    def solve(self) -> dict[int, int] | None:
+    def solve(self) -> list[EvalResult] | None:
         fifos_dse_space = {}
         for fifo in self.fifos:
             fifo_id = fifo.id
-            fifo_depths = self.trace_base.compiled.get_fifo_design_space([fifo_id], fifo.width)
+            fifo_depths = self.trace_base.compiled.get_fifo_design_space(
+                [fifo_id], fifo.width
+            )
             fifos_dse_space[fifo_id] = fifo_depths
 
         sampled_configs = []
@@ -58,12 +60,14 @@ class RandomSearchOptimizer(FIFOOptimizer):
             for fifo_id, fifo_depths in fifos_dse_space.items():
                 sample[fifo_id] = self.r.choice(fifo_depths)
             sampled_configs.append(sample)
-        
-        
-        
-        raise NotImplementedError
 
-    
+        results = []
+        for sample_config in sampled_configs:
+            result = self.eval_solution_single(sample_config)
+            results.append(result)
+
+        return results
+
 
 class GAOptimizer(FIFOOptimizer):
     def solve(self) -> dict | None:
@@ -84,7 +88,7 @@ class SimulatedAnnealingOptimizer(FIFOOptimizer):
     # def __init__(self, name: str, round_type: ROUND_TYPE = ROUND_TYPE.RINT):
     def __init__(self, *args, round_type: ROUND_TYPE = ROUND_TYPE.RINT, **kwargs):
         super().__init__(*args, **kwargs)
-        self.round_type = round_type 
+        self.round_type = round_type
 
     def solve(self) -> dict | None:
         n = self.num_fifos
@@ -114,4 +118,3 @@ class SimulatedAnnealingOptimizer(FIFOOptimizer):
 class HuristicOptimizer(FIFOOptimizer):
     def solve(self) -> dict | None:
         raise NotImplementedError
-

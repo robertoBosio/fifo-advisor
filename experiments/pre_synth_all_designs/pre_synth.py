@@ -42,7 +42,7 @@ designs_to_test = [
     design for design in designs_to_test if design not in designs_to_ignore
 ]
 
-N_JOBS = 8
+N_JOBS = 24
 
 
 def synth_design(design_to_test: str):
