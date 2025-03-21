@@ -1,7 +1,8 @@
 import enum
+import itertools
 import random
 from abc import ABC, abstractmethod
-from collections import deque
+from collections import defaultdict, deque
 from copy import deepcopy
 from enum import Enum
 from functools import cached_property
@@ -62,7 +63,7 @@ class RandomSearchOptimizer(FIFOOptimizer):
         self.seed = seed
         self.r = random.Random(seed)
 
-    def solve(self) -> list[EvalResult] | None:
+    def solve(self) -> list[EvalResult]:
         fifos_dse_space = {}
         for fifo in self.fifos:
             fifo_id = fifo.id
@@ -84,6 +85,97 @@ class RandomSearchOptimizer(FIFOOptimizer):
         #     results.append(result)
         results = self.eval_solution_parallel(sampled_configs)
 
+        return results
+
+
+class GroupRandomSearchOptimizer(FIFOOptimizer):
+    def __init__(self, *args, n_samples: int = 100, seed: int = 7, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.n_samples = n_samples
+        self.seed = seed
+        self.r = random.Random(seed)
+
+    def solve(self) -> list[EvalResult]:
+        print("Collecting random samples for each FIFO group...")
+        fifo_groups = defaultdict(list)
+        for fifo in self.fifos:
+            fifo_groups[fifo.get_display_name()].append(fifo)
+
+        fifo_groups_depths = {}
+        for fifo_group, fifos in fifo_groups.items():
+            fifo_groups_depths[fifo_group] = (
+                self.trace_base.compiled.get_fifo_design_space(
+                    [fifo.id for fifo in fifos], fifos[0].width
+                )
+            )
+
+        sampled_configs = []
+        for _ in range(self.n_samples):
+            sample: dict[int, int] = {}
+            for fifo_group, fifo_depths in fifo_groups_depths.items():
+                group_depths = self.r.choice(fifo_depths)
+                for fifo in fifo_groups[fifo_group]:
+                    sample[fifo.id] = group_depths
+            sampled_configs.append(sample)
+
+        print("Evaluating random samples...")
+        results = self.eval_solution_parallel(sampled_configs)
+        return results
+
+
+class GroupExhaustiveOptimizer(FIFOOptimizer):
+    def __init__(self, *args, size_limit: int = 10_000, seed: int = 7, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.size_limit = size_limit
+        self.seed = seed
+        self.r = random.Random(seed)
+
+    def solve(self) -> list[EvalResult]:
+        print("Collecting random samples for each FIFO group...")
+        fifo_groups = defaultdict(list)
+        for fifo in self.fifos:
+            fifo_groups[fifo.get_display_name()].append(fifo)
+
+        fifo_groups_depths = {}
+        for fifo_group, fifos in fifo_groups.items():
+            fifo_groups_depths[fifo_group] = (
+                self.trace_base.compiled.get_fifo_design_space(
+                    [fifo.id for fifo in fifos], fifos[0].width
+                )
+            )
+
+        design_space_size = 1
+        for fifo_group, fifo_depths in fifo_groups_depths.items():
+            design_space_size *= len(fifo_depths)
+
+        if design_space_size > self.size_limit:
+            raise ValueError(
+                f"Design space size {design_space_size} exceeds limit {self.size_limit}. Use a larger size limit or different optimizer."
+            )
+
+        fifo_groups_keys = list(fifo_groups_depths.keys())
+        fifo_groups_values = list(fifo_groups_depths.values())
+
+        combos = itertools.product(
+            *fifo_groups_values,
+        )
+
+        samples = []
+        for combo in combos:
+            sample: dict[int, int] = {}
+            for fifo_group, fifo_depths in zip(fifo_groups_keys, combo):
+                for fifo in fifo_groups[fifo_group]:
+                    sample[fifo.id] = fifo_depths
+            samples.append(sample)
+
+        assert len(samples) == design_space_size, (
+            "mismatch in computed design space size and samples generated size"
+        )
+
+        print("Evaluating random samples...")
+        results = self.eval_solution_parallel(samples)
         return results
 
 
@@ -193,7 +285,7 @@ class GAOptimizer(FIFOOptimizer):
             mutation=PM(prob=0.5, eta=20, vtype=float, repair=RoundingRepair()),
         )
 
-    def solve(self) -> list[EvalResult] | None:
+    def solve(self) -> list[EvalResult]:
         results_history_tracker = ResultsHistoryTracker(self, self.fifo_ids)
 
         _res = minimize_pymoo(
@@ -210,12 +302,12 @@ class GAOptimizer(FIFOOptimizer):
 
 
 class PSOptimizer(FIFOOptimizer):
-    def solve(self) -> list[EvalResult] | None:
+    def solve(self) -> list[EvalResult]:
         raise NotImplementedError
 
 
 class BayesianOptimizer(FIFOOptimizer):
-    def solve(self) -> list[EvalResult] | None:
+    def solve(self) -> list[EvalResult]:
         raise NotImplementedError
 
 
@@ -230,7 +322,7 @@ class SimulatedAnnealingOptimizer(FIFOOptimizer):
             self.n_scaling_factors
         )
 
-    def solve(self) -> list[EvalResult] | None:
+    def solve(self) -> list[EvalResult]:
         print("Starting simulated annealing optimization...")
         results = []
 
@@ -337,7 +429,7 @@ class SimulatedAnnealingOptimizer(FIFOOptimizer):
 class HuristicOptimizer(FIFOOptimizer):
     level_sets = [0.01, 0.05, 0.1, 0.2, 0.5, 1.0]
 
-    def solve(self) -> list[EvalResult] | None:
+    def solve(self) -> list[EvalResult]:
         all_evals = []
         for level in self.level_sets:
             print(f"Running heuristic optimization for level: {level}...")

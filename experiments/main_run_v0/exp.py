@@ -12,6 +12,8 @@ from fifo_opt.automation import TestCase
 from fifo_opt.opt_env import is_pareto_efficient_simple
 from fifo_opt.solvers import (
     GAOptimizer,
+    GroupExhaustiveOptimizer,
+    GroupRandomSearchOptimizer,
     HuristicOptimizer,
     RandomSearchOptimizer,
     SimulatedAnnealingOptimizer,
@@ -60,12 +62,12 @@ designs_all = [
 
 designs_all = [design for design in designs_all if design.dir.name.endswith("__opt5")]
 
-designs_to_keep = ["Autoencoder"]
-designs_all = [
-    design
-    for design in designs_all
-    if any(design.name.startswith(d) for d in designs_to_keep)
-]
+# designs_to_keep = ["Autoencoder"]
+# designs_all = [
+#     design
+#     for design in designs_all
+#     if any(design.name.startswith(d) for d in designs_to_keep)
+# ]
 
 
 pp(list(map(lambda x: x.dir.name, designs_all)))
@@ -95,9 +97,10 @@ pp(list(map(lambda x: x.dir.name, designs_all)))
 #             return False
 
 
-designs_all_filtered = designs_all[:1]
+designs_all_filtered = designs_all[:]
 
-for design in designs_all_filtered:
+
+def eval_one_design(design):
     print(f"Running design: {design.dir}")
     prj_path = design.prj_path.resolve().absolute()
 
@@ -109,14 +112,30 @@ for design in designs_all_filtered:
     #     n_samples=100_000,
     # )
 
-    optimizer = GAOptimizer(
+    # optimizer = GroupRandomSearchOptimizer(
+    #     design.solution_dir,
+    #     env_vars_extra={
+    #         "PRJ_PATH": str(prj_path),
+    #     },
+    #     n_samples=10_000,
+    # )
+
+    optimizer = GroupExhaustiveOptimizer(
         design.solution_dir,
         env_vars_extra={
             "PRJ_PATH": str(prj_path),
         },
-        n_gen=20,
-        pop_size=1000,
+        size_limit=100_000,
     )
+
+    # optimizer = GAOptimizer(
+    #     design.solution_dir,
+    #     env_vars_extra={
+    #         "PRJ_PATH": str(prj_path),
+    #     },
+    #     n_gen=20,
+    #     pop_size=1000,
+    # )
 
     # optimizer = SimulatedAnnealingOptimizer(
     #     design.solution_dir,
@@ -137,7 +156,12 @@ for design in designs_all_filtered:
     baseline_latency = result_baseline.latency
     baseline_bram_usage_total = result_baseline.bram_usage_total
 
-    results = optimizer.solve()
+    try:
+        results = optimizer.solve()
+    except Exception as e:
+        print(f"Error in design {design.dir}: {e}")
+        return
+
     results_no_deadlock = [result for result in results if not result.deadlock]
 
     n_total = len(results)
@@ -233,3 +257,9 @@ for design in designs_all_filtered:
         / f"{design.dir.name}__{optimizer.__class__.__name__}__latency_vs_bram.png"
     )
     fig.savefig(fig_path, dpi=300)
+
+
+N_JOBS = 4
+Parallel(n_jobs=N_JOBS, backend="multiprocessing")(
+    delayed(eval_one_design)(design) for design in designs_all_filtered
+)
