@@ -1,10 +1,21 @@
 import enum
 import random
 from abc import ABC, abstractmethod
+from collections import deque
+from copy import deepcopy
 from enum import Enum
 from functools import cached_property
 
 import numpy as np
+from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.algorithms.soo.nonconvex.ga import GA
+from pymoo.core.callback import Callback
+from pymoo.core.problem import ElementwiseProblem, Problem
+from pymoo.operators.crossover.sbx import SBX
+from pymoo.operators.mutation.pm import PM
+from pymoo.operators.repair.rounding import RoundingRepair
+from pymoo.operators.sampling.rnd import IntegerRandomSampling
+from pymoo.optimize import minimize as minimize_pymoo
 from scipy.optimize import Bounds, dual_annealing, minimize
 
 from fifo_opt.opt_env import EvalResult, FIFOOptimizer
@@ -37,6 +48,12 @@ def round(x: np.ndarray, round_type: ROUND_TYPE) -> np.ndarray:
             raise ValueError(f"Unknown rounding type: {round_type}")
 
 
+def compute_dual_obj_scaling_factors(N_points: int) -> np.ndarray:
+    first_row = np.linspace(0, 1, N_points, endpoint=True)
+    second_row = first_row[::-1]
+    return np.vstack((first_row, second_row)).T
+
+
 class RandomSearchOptimizer(FIFOOptimizer):
     def __init__(self, *args, n_samples: int = 100, seed: int = 7, **kwargs):
         super().__init__(*args, **kwargs)
@@ -61,60 +78,312 @@ class RandomSearchOptimizer(FIFOOptimizer):
                 sample[fifo_id] = self.r.choice(fifo_depths)
             sampled_configs.append(sample)
 
-        results = []
-        for sample_config in sampled_configs:
-            result = self.eval_solution_single(sample_config)
-            results.append(result)
+        # results = []
+        # for sample_config in sampled_configs:
+        #     result = self.eval_solution_single(sample_config)
+        #     results.append(result)
+        results = self.eval_solution_parallel(sampled_configs)
 
         return results
 
 
+class FIFOOptProblemInt(Problem):
+    def __init__(
+        self,
+        fifo_optmizer_obj: FIFOOptimizer,
+        n_fifos: int,
+        fifo_ids: list[int],
+        fifo_upper_bounds: dict[int, int],
+    ):
+        self.fifo_optmizer_obj = fifo_optmizer_obj
+        self.n_fifos = n_fifos
+        self.fifo_ids = fifo_ids
+        self.fifo_upper_bounds = fifo_upper_bounds
+        assert len(set(fifo_upper_bounds.keys())) == n_fifos, (
+            "Must have a fifo upper bound for each fifo"
+        )
+
+        fifo_upper_bounds_ordered = [fifo_upper_bounds[fifo_id] for fifo_id in fifo_ids]
+
+        super().__init__(
+            n_var=self.n_fifos,
+            n_obj=2,
+            n_ieq_constr=1,
+            xl=2 * np.ones(self.n_fifos),
+            xu=np.array(fifo_upper_bounds_ordered),
+            vtype=int,
+        )
+
+    def _evaluate(self, x, out, *args, **kwargs):
+        # fifo_sizes = {fifo_id: size for fifo_id, size in zip(self.fifo_ids, x)}
+        # result = self.fifo_optmizer_obj.eval_solution_single(fifo_sizes)
+        # if result.deadlock:
+        #     out["F"] = [np.inf, np.inf]
+        #     out["H"] = [1]
+        # else:
+        #     out["F"] = [result.latency, result.bram_usage_total]
+        #     out["H"] = [0]
+
+        fifo_sizes = []
+        for solution in x:
+            fifo_sizes.append(
+                {fifo_id: size for fifo_id, size in zip(self.fifo_ids, solution)}
+            )
+        results = self.fifo_optmizer_obj.eval_solution_parallel(fifo_sizes)
+        F = np.zeros((len(results), 2))
+        G = np.zeros((len(results), 1))
+        for i, result in enumerate(results):
+            if result.deadlock:
+                F[i] = [np.inf, np.inf]
+                G[i][0] = 1
+            else:
+                F[i] = [result.latency, result.bram_usage_total]
+                G[i][0] = -1
+        out["F"] = F
+        out["G"] = G
+
+
+class ResultsHistoryTracker(Callback):
+    def __init__(self, fifo_optmizer_obj: FIFOOptimizer, fifo_ids: list[int]):
+        super().__init__()
+        self.fifo_optmizer_obj = fifo_optmizer_obj
+        self.fifo_ids = fifo_ids
+        self.all_results: list[EvalResult] = []
+
+    def notify(self, algorithm):
+        X = algorithm.pop.get("X")
+        fifo_configs = []
+        for x in X:
+            fifo_sizes = {fifo_id: size for fifo_id, size in zip(self.fifo_ids, x)}
+            fifo_configs.append(fifo_sizes)
+        results = self.fifo_optmizer_obj.eval_solution_parallel(fifo_configs)
+        self.all_results.extend(results)
+
+
 class GAOptimizer(FIFOOptimizer):
-    def solve(self) -> dict | None:
-        raise NotImplementedError
+    def __init__(
+        self, *args, seed: int = 7, n_gen: int = 10, pop_size: int = 100, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+
+        self.seed = seed
+        self.n_gen = n_gen
+        self.pop_size = pop_size
+
+        # check that all values in fifo_sizes_base are not none
+        if any(fifo_size is None for fifo_size in self.fifo_sizes_base.values()):
+            raise ValueError(
+                "All fifo sizes must have a default value to have some kind of upper bound for the optimization."
+            )
+
+        self.fifo_ids = [fifo.id for fifo in self.fifos]
+
+        self.problem = FIFOOptProblemInt(
+            self,
+            n_fifos=self.num_fifos,
+            fifo_ids=self.fifo_ids,
+            fifo_upper_bounds=self.fifo_sizes_base,
+        )
+
+        self.algorithm = NSGA2(
+            pop_size=self.pop_size,
+            eliminate_duplicates=True,
+            sampling=IntegerRandomSampling(),
+            crossover=SBX(prob=0.5, eta=15, vtype=float, repair=RoundingRepair()),
+            mutation=PM(prob=0.5, eta=20, vtype=float, repair=RoundingRepair()),
+        )
+
+    def solve(self) -> list[EvalResult] | None:
+        results_history_tracker = ResultsHistoryTracker(self, self.fifo_ids)
+
+        _res = minimize_pymoo(
+            self.problem,
+            self.algorithm,
+            termination=("n_gen", self.n_gen),
+            seed=self.seed,
+            save_history=False,
+            callback=results_history_tracker,
+            verbose=True,
+        )
+
+        return results_history_tracker.all_results
 
 
 class PSOptimizer(FIFOOptimizer):
-    def solve(self) -> dict | None:
+    def solve(self) -> list[EvalResult] | None:
         raise NotImplementedError
 
 
 class BayesianOptimizer(FIFOOptimizer):
-    def solve(self) -> dict | None:
+    def solve(self) -> list[EvalResult] | None:
         raise NotImplementedError
 
 
 class SimulatedAnnealingOptimizer(FIFOOptimizer):
-    # def __init__(self, name: str, round_type: ROUND_TYPE = ROUND_TYPE.RINT):
     def __init__(self, *args, round_type: ROUND_TYPE = ROUND_TYPE.RINT, **kwargs):
         super().__init__(*args, **kwargs)
         self.round_type = round_type
 
-    def solve(self) -> dict | None:
-        n = self.num_fifos
+        self.fifo_ids = [fifo.id for fifo in self.fifos]
+        self.n_scaling_factors = 8
+        self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
+            self.n_scaling_factors
+        )
 
-        # def objective_function(x: np.ndarray) -> float:
-        #     x = round(x, self.round_type)
-        #     y = eval_solution(x)
-        #     return y
+    def solve(self) -> list[EvalResult] | None:
+        print("Starting simulated annealing optimization...")
+        results = []
 
-        # bounds = Bounds(
-        #     lb=np.full_like((n,), self.min_fifo_size),
-        #     ub=np.full_like((n,), np.inf),
-        # )
-        # result = dual_annealing(
-        #     objective_function,
-        #     bounds=bounds,
-        #     maxiter=1000,
-        #     local_search_options={"method": "L-BFGS-B"},
-        # )
+        results_all = []
 
-        # TODO: post-process the result to get a list solutions
-        # return result.x
+        for _idx in range(self.n_scaling_factors):
+            print(f"Running simulated annealing for scaling factor idx: {_idx}...")
+            scaling_factor_latency = self.dual_objective_scaling_factors[_idx, 0]
+            scaling_factor_bram = self.dual_objective_scaling_factors[_idx, 1]
 
-        raise NotImplementedError
+            def objective_function(x: np.ndarray) -> float:
+                x = round(x, self.round_type).astype(int)
+                sample = dict(zip(self.fifo_ids, x))  # Directly construct dictionary
+
+                y = self.eval_solution_single(sample)
+                results_all.append(y)
+
+                if y.deadlock:
+                    return np.inf
+
+                return (
+                    scaling_factor_latency * y.latency
+                    + scaling_factor_bram * y.bram_usage_total
+                )
+
+            bounds = Bounds(
+                lb=np.full_like((self.num_fifos,), self.min_fifo_size),  # type: ignore
+                ub=np.array(
+                    [self.fifo_sizes_base[fifo_id] for fifo_id in self.fifo_ids]  # type: ignore
+                ),
+            )
+
+            result = dual_annealing(
+                objective_function,
+                bounds=bounds,
+                maxfun=100,
+                no_local_search=True,
+                rng=7,
+            )
+            x_rounded = round(result.x, self.round_type)
+            x_python = x_rounded.tolist()
+            x_python_int = [int(x) for x in x_python]
+
+            sol_sample = {
+                fifo_id: size for fifo_id, size in zip(self.fifo_ids, x_python_int)
+            }
+            sol_eval_results = self.eval_solution_single(sol_sample)
+            results.append(sol_eval_results)
+
+        return results_all
+
+
+# from collections import deque
+# from tqdm import tqdm
+
+# def format_latency(cycles: int):
+#     pluralized_cycles = "cycles" if cycles != 1 else "cycle"
+#     formatted = f"{cycles:,d} {pluralized_cycles}"
+#     if frequency is not None:
+#         latency_ms = cycles * 1e3 / frequency
+#         formatted += f" ({latency_ms:,.3f} ms)"
+#     return formatted
+
+# def try_depths(dfg, test_depths):
+#     try:
+#         test_latency = dfg.with_depths(test_depths).get_latency(show_progress=False)
+#     except AssertionError:
+#         return None
+#     else:
+#         return test_latency[DFGEndpoint.END]
+
+# try:
+#     opt_depths_step_1
+# except NameError:
+#     opt_depths_step_1 = dict(depths)
+#     tested_step_1 = set()
+
+# import concurrent.futures
+# with concurrent.futures.ProcessPoolExecutor(max_workers=32) as executor:
+#     test_streams = sorted([stream for stream, depth in depths.items() if depth > 2 and stream not in tested_step_1], key=lambda stream: -depths[stream])
+#     print("Before:", sum(opt_depths_step_1.values()), "sum-of-depths with", sum(1 for depth in opt_depths_step_1.values() if depth > 2), "streams with depth > 2")
+#     print("Submitting", len(test_streams), "jobs for parallel execution...")
+#     print("(Progress information will not be shown)")
+#     future_to_stream = {executor.submit(try_depths, dfg, {**opt_depths_step_1, stream: 2}): stream for stream in test_streams}
+#     for i, future in enumerate(concurrent.futures.as_completed(future_to_stream)):
+#         stream = future_to_stream[future]
+#         test_cycles = future.result()
+#         prefix = f"({i + 1}/{len(test_streams)})"
+#         print(prefix, "Trying stream", stream.name, f"({opt_depths_step_1[stream]} to 2)...")
+#         if test_cycles is None:
+#             print(prefix, "Deadlocked.")
+#         else:
+#             print(prefix, "New latency is", format_latency(test_cycles))
+#             print(prefix, "This is", f"{test_cycles / baseline_latency[DFGEndpoint.END] - 1:.1%}", "higher than baseline latency of", format_latency(baseline_latency[DFGEndpoint.END]))
+#             if test_cycles > 1.01 * baseline_latency[DFGEndpoint.END]:
+#                 print(prefix, "Rejected.")
+#             else:
+#                 opt_depths_step_1[stream] = 2
+#                 print(prefix, "Accepted. Now:", sum(1 for depth in opt_depths_step_1.values() if depth > 2), "streams with depth > 2")
+#             tested_step_1.add(stream)
+#     print("After optimization step 1:", sum(opt_depths_step_1.values()), "sum-of-depths with", sum(1 for depth in opt_depths_step_1.values() if depth
 
 
 class HuristicOptimizer(FIFOOptimizer):
-    def solve(self) -> dict | None:
-        raise NotImplementedError
+    level_sets = [0.01, 0.05, 0.1, 0.2, 0.5, 1.0]
+
+    def solve(self) -> list[EvalResult] | None:
+        all_evals = []
+        for level in self.level_sets:
+            print(f"Running heuristic optimization for level: {level}...")
+
+            base_depths = {}
+            for fifo, fifo_io in self.simulation_base.fifo_io.items():
+                fifo_id = fifo.id
+                base_depths[fifo_id] = max(fifo_io.get_observed_depth(), 2)
+
+            eval_results = self.eval_solution_single(base_depths)
+            all_evals.append(eval_results)
+            assert not eval_results.deadlock
+
+            base_latency = eval_results.latency
+            base_bram_usage_total = eval_results.bram_usage_total
+
+            assert base_latency is not None
+            assert base_bram_usage_total is not None
+
+            fifo_ids_sorted_by_depth = sorted(
+                base_depths.keys(), key=lambda fifo_id: base_depths[fifo_id]
+            )
+
+            fifo_ids_larger_than_two = [
+                fifo_id
+                for fifo_id in fifo_ids_sorted_by_depth
+                if base_depths[fifo_id] > 2
+            ]
+
+            working_set_of_depths = deepcopy(base_depths)
+
+            for fifo_id in fifo_ids_larger_than_two:
+                new_sample = deepcopy(working_set_of_depths)
+                new_sample[fifo_id] = 2
+                eval_results_case = self.eval_solution_single(new_sample)
+                all_evals.append(eval_results_case)
+                if eval_results_case.deadlock:
+                    continue
+                assert eval_results_case.latency is not None
+                if eval_results_case.latency > base_latency * 1.01:
+                    continue
+
+                working_set_of_depths[fifo_id] = 2
+
+            eval_results_final = self.eval_solution_single(working_set_of_depths)
+            all_evals.append(eval_results_final)
+            assert not eval_results_final.deadlock
+
+        return all_evals

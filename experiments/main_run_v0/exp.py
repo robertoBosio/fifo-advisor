@@ -9,7 +9,13 @@ from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
 
 from fifo_opt.automation import TestCase
-from fifo_opt.solvers import RandomSearchOptimizer
+from fifo_opt.opt_env import is_pareto_efficient_simple
+from fifo_opt.solvers import (
+    GAOptimizer,
+    HuristicOptimizer,
+    RandomSearchOptimizer,
+    SimulatedAnnealingOptimizer,
+)
 
 DIR_CURRENT = Path(__file__).parent
 
@@ -95,19 +101,50 @@ for design in designs_all_filtered:
     print(f"Running design: {design.dir}")
     prj_path = design.prj_path.resolve().absolute()
 
-    optimizer_random_search = RandomSearchOptimizer(
+    # optimizer = RandomSearchOptimizer(
+    #     design.solution_dir,
+    #     env_vars_extra={
+    #         "PRJ_PATH": str(prj_path),
+    #     },
+    #     n_samples=100_000,
+    # )
+
+    optimizer = GAOptimizer(
         design.solution_dir,
         env_vars_extra={
             "PRJ_PATH": str(prj_path),
         },
-        n_samples=2000,
+        n_gen=20,
+        pop_size=1000,
     )
-    results = optimizer_random_search.solve()
+
+    # optimizer = SimulatedAnnealingOptimizer(
+    #     design.solution_dir,
+    #     env_vars_extra={
+    #         "PRJ_PATH": str(prj_path),
+    #     },
+    # )
+
+    # optimizer = HuristicOptimizer(
+    #     design.solution_dir,
+    #     env_vars_extra={
+    #         "PRJ_PATH": str(prj_path),
+    #     },
+    # )
+
+    result_baseline = optimizer.eval_solution_default()
+    assert result_baseline.deadlock is False
+    baseline_latency = result_baseline.latency
+    baseline_bram_usage_total = result_baseline.bram_usage_total
+
+    results = optimizer.solve()
     results_no_deadlock = [result for result in results if not result.deadlock]
 
     n_total = len(results)
     n_no_deadlock = len(results_no_deadlock)
     n_deadlock = len(results) - n_no_deadlock
+
+    pareto_mask = is_pareto_efficient_simple(results_no_deadlock)
 
     vals_latency = [
         result.latency for result in results_no_deadlock if result.latency is not None
@@ -118,15 +155,54 @@ for design in designs_all_filtered:
         if result.bram_usage_total is not None
     ]
 
+    vals_latency_pareto = [
+        latency
+        for latency, is_efficient in zip(vals_latency, pareto_mask)
+        if is_efficient
+    ]
+
+    vals_bram_usage_total_pareto = [
+        bram_usage
+        for bram_usage, is_efficient in zip(vals_bram_usage_total, pareto_mask)
+        if is_efficient
+    ]
+
     fig, ax = plt.subplots(1, 1, figsize=(6, 6))
 
     ax.grid(which="both", linestyle="--", linewidth=0.5)
     ax.grid(which="major", linestyle="--", linewidth=0.8)
     ax.set_axisbelow(True)
     ax.scatter(vals_bram_usage_total, vals_latency)
+
+    vals_latency_pareto_sorted, vals_bram_usage_total_pareto_sorted = zip(
+        *sorted(
+            zip(vals_latency_pareto, vals_bram_usage_total_pareto),
+            key=lambda x: (x[1], x[0]),
+        )
+    )
+    ax.plot(
+        vals_bram_usage_total_pareto_sorted,
+        vals_latency_pareto_sorted,
+        marker="o",
+        color="red",
+        label="Pareto Front",
+        linestyle="--",
+    )
+
+    ax.scatter(
+        baseline_bram_usage_total,
+        baseline_latency,
+        marker="*",
+        color="green",
+        label="Baseline",
+        s=100,
+    )
+
     ax.set_xlabel("BRAM Usage Total")
     ax.set_ylabel("Latency")
-    ax.set_title(f'FIFO Design Space for Design "{design.dir.name}"')
+    ax.set_title(
+        f'FIFO Design Space for Design "{design.dir.name}"\nSolver: {optimizer.__class__.__name__}'
+    )
 
     # x_min = 0
     # x_max = max(vals_bram_usage_total) * 1.1
@@ -152,5 +228,8 @@ for design in designs_all_filtered:
 
     fig.tight_layout()
 
-    fig_path = DIR_FIGURES / f"{design.dir.name}__latency_vs_bram.png"
+    fig_path = (
+        DIR_FIGURES
+        / f"{design.dir.name}__{optimizer.__class__.__name__}__latency_vs_bram.png"
+    )
     fig.savefig(fig_path, dpi=300)

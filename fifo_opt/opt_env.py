@@ -37,48 +37,58 @@ class FIFOOptimizer(ABC):
         for key, value in env_vars_extra.items():
             os.environ[key] = value
 
-        self.solution = Solution(self.vitis_hls_solution_dir)
-        self.runner = Runner(self.solution)
+        try:
+            with open(os.path.join(vitis_hls_solution_dir, "trace.pkl"), "rb") as f:
+                self.trace_base = pickle.load(f)
+                print("Loaded trace from pickle file.")
 
-        self.runner.steps[RunnerStep.ANALYZING_PROJECT].on_start(
-            lambda _: print("Analyzing project...")
-        )
-        self.runner.steps[RunnerStep.WAITING_FOR_BITCODE].on_start(
-            lambda _: print("Waiting for bitcode to be generated...")
-        )
-        self.runner.steps[RunnerStep.GENERATING_SUPPORT_CODE].on_start(
-            lambda _: print("Generating support code...")
-        )
-        self.runner.steps[RunnerStep.LINKING_BITCODE].on_start(
-            lambda _: print("Linking bitcode...")
-        )
-        self.runner.steps[RunnerStep.COMPILING_BITCODE].on_start(
-            lambda _: print("Compiling bitcode...")
-        )
-        self.runner.steps[RunnerStep.LINKING_TESTBENCH].on_start(
-            lambda _: print("Linking testbench...")
-        )
-        self.runner.steps[RunnerStep.RUNNING_TESTBENCH].on_start(
-            lambda _: print("Running testbench...")
-        )
-        self.runner.steps[RunnerStep.PARSING_SCHEDULE_DATA].on_start(
-            lambda _: print("Parsing schedule data from C synthesis...")
-        )
-        self.runner.steps[RunnerStep.RESOLVING_TRACE].on_start(
-            lambda _: print("Resolving dynamic schedule from trace...")
-        )
+        except FileNotFoundError:
+            solution = Solution(self.vitis_hls_solution_dir)
+            runner = Runner(solution)
 
-        self.trace_base = asyncio.run(self.runner.run())
+            runner.steps[RunnerStep.ANALYZING_PROJECT].on_start(
+                lambda _: print("Analyzing project...")
+            )
+            runner.steps[RunnerStep.WAITING_FOR_BITCODE].on_start(
+                lambda _: print("Waiting for bitcode to be generated...")
+            )
+            runner.steps[RunnerStep.GENERATING_SUPPORT_CODE].on_start(
+                lambda _: print("Generating support code...")
+            )
+            runner.steps[RunnerStep.LINKING_BITCODE].on_start(
+                lambda _: print("Linking bitcode...")
+            )
+            runner.steps[RunnerStep.COMPILING_BITCODE].on_start(
+                lambda _: print("Compiling bitcode...")
+            )
+            runner.steps[RunnerStep.LINKING_TESTBENCH].on_start(
+                lambda _: print("Linking testbench...")
+            )
+            runner.steps[RunnerStep.RUNNING_TESTBENCH].on_start(
+                lambda _: print("Running testbench...")
+            )
+            runner.steps[RunnerStep.PARSING_SCHEDULE_DATA].on_start(
+                lambda _: print("Parsing schedule data from C synthesis...")
+            )
+            runner.steps[RunnerStep.RESOLVING_TRACE].on_start(
+                lambda _: print("Resolving dynamic schedule from trace...")
+            )
+
+            self.trace_base = asyncio.run(runner.run())
+            with open(os.path.join(vitis_hls_solution_dir, "trace.pkl"), "wb") as f:
+                pickle.dump(self.trace_base, f)
+                print("Saved trace to pickle file.")
+
         self.simulation_base = self.trace_base.compiled.execute(self.trace_base.params)
 
         self.fifos = self.trace_base.fifos
         self.num_fifos = len(self.trace_base.fifos)
 
-        self.fifo_sizes_base = []
+        self.fifo_sizes_base = {}
         for fifo in self.fifos:
             fifo_id = fifo.id
             fifo_depth: int | None = self.trace_base.params.fifo_depths[fifo_id]
-            self.fifo_sizes_base.append(fifo_depth)
+            self.fifo_sizes_base[fifo_id] = fifo_depth
 
     def eval_solution_single(self, x: dict[int, int]) -> EvalResult:
         base_params = self.trace_base.params
@@ -113,11 +123,80 @@ class FIFOOptimizer(ABC):
     def eval_solution_parallel(
         self, x_multiple: list[dict[int, int]]
     ) -> list[EvalResult]:
+        # results = []
+        # for x in x_multiple:
+        #     result = self.eval_solution_single(x)
+        #     results.append(result)
+
+        base_params = self.trace_base.params
+        fifo_widths: dict[int, int] = {
+            fifo.id: fifo.width for fifo in self.trace_base.fifos
+        }
+
+        design_points = x_multiple
+        dse_results = self.trace_base.compiled.dse(
+            base_params, fifo_widths, design_points
+        )
+
         results = []
-        for x in x_multiple:
-            result = self.eval_solution_single(x)
-            results.append(result)
+        for dse_result, design_point in zip(dse_results, design_points):
+            fifo_sizes = design_point
+            if dse_result.latency is None:
+                deadlock = True
+                latency = None
+                bram_usage_total = None
+            else:
+                deadlock = False
+                latency = dse_result.latency
+                bram_usage_total = dse_result.bram_count
+
+            results.append(
+                EvalResult(
+                    fifo_sizes=fifo_sizes,
+                    deadlock=deadlock,
+                    latency=latency,
+                    bram_usage_total=bram_usage_total,
+                )
+            )
+
         return results
 
+    def eval_solution_default(self) -> EvalResult:
+        return self.eval_solution_single(self.fifo_sizes_base)
+
     @abstractmethod
-    def solve(self) -> list[EvalResult] | None: ...
+    def solve(self) -> list[EvalResult]: ...
+
+
+class DummyFIFOOptimizer(FIFOOptimizer):
+    def solve(self) -> list[EvalResult]:
+        return []
+
+
+# def is_pareto_efficient_simple(costs: np.ndarray) -> np.ndarray:
+def is_pareto_efficient_simple(eval_results: list[EvalResult]) -> list[bool]:
+    """
+    Find the pareto-efficient points
+    :param costs: An (n_points, n_costs) array
+    :return: A (n_points, ) boolean array, indicating whether each point is Pareto efficient
+    """
+    costs = np.zeros((len(eval_results), 2))
+    for i, result in enumerate(eval_results):
+        if result.deadlock:
+            costs[i, 0] = np.inf
+            costs[i, 1] = np.inf
+        else:
+            costs[i, 0] = result.latency
+            costs[i, 1] = result.bram_usage_total
+
+    is_efficient = np.ones(costs.shape[0], dtype=bool)
+    for i, c in enumerate(costs):
+        if is_efficient[i]:
+            is_efficient[is_efficient] = np.any(
+                costs[is_efficient] < c, axis=1
+            )  # Keep any point with a lower cost
+            is_efficient[i] = True  # And keep self
+
+    is_efficient_list = is_efficient.tolist()
+    is_efficient_list_bool = [bool(v) for v in is_efficient_list]
+    return is_efficient_list_bool

@@ -4,7 +4,7 @@ channels:
   - https://sharc-lab.github.io/LightningSim/repo
 dependencies:
   - python=3.11
-  - lightningsim
+  - lightningsim=0.2.5
   - numpy
   - pandas
   - matplotlib
