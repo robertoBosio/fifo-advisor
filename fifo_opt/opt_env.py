@@ -23,7 +23,7 @@ class EvalResult:
     # bram_usage_per_fifo: dict[int, int] | None
 
 
-class FIFOOptimizer(ABC):
+class LSEnv:
     def __init__(
         self,
         vitis_hls_solution_dir: Path,
@@ -164,13 +164,22 @@ class FIFOOptimizer(ABC):
     def eval_solution_default(self) -> EvalResult:
         return self.eval_solution_single(self.fifo_sizes_base)
 
+    # @abstractmethod
+    # def solve(self) -> list[EvalResult]: ...
+
+
+class FIFOOptimizer(ABC):
+    def __init__(self, sim_env: LSEnv):
+        self.sim_env: LSEnv = sim_env
+
     @abstractmethod
-    def solve(self) -> list[EvalResult]: ...
-
-
-class DummyFIFOOptimizer(FIFOOptimizer):
     def solve(self) -> list[EvalResult]:
-        return []
+        pass
+
+
+# class DummyFIFOOptimizer(FIFOOptimizer):
+#     def solve(self) -> list[EvalResult]:
+#         return []
 
 
 # def is_pareto_efficient_simple(costs: np.ndarray) -> np.ndarray:

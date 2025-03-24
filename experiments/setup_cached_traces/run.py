@@ -9,13 +9,7 @@ from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
 
 from fifo_opt.automation import TestCase
-from fifo_opt.opt_env import DummyFIFOOptimizer, is_pareto_efficient_simple
-from fifo_opt.solvers import (
-    GAOptimizer,
-    HuristicOptimizer,
-    RandomSearchOptimizer,
-    SimulatedAnnealingOptimizer,
-)
+from fifo_opt.opt_env import LSEnv
 
 DIR_CURRENT = Path(__file__).parent
 
@@ -64,7 +58,7 @@ def run_single(design: TestCase) -> None:
     print(f"Running design: {design.dir}")
     prj_path = design.prj_path.resolve().absolute()
 
-    _opt = DummyFIFOOptimizer(
+    _sim_env = LSEnv(
         design.solution_dir,
         env_vars_extra={
             "PRJ_PATH": str(prj_path),

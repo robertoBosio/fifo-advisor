@@ -9,7 +9,7 @@ from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
 
 from fifo_opt.automation import TestCase
-from fifo_opt.opt_env import is_pareto_efficient_simple
+from fifo_opt.opt_env import LSEnv, is_pareto_efficient_simple
 from fifo_opt.solvers import (
     GAOptimizer,
     GroupExhaustiveOptimizer,
@@ -104,57 +104,49 @@ def eval_one_design(design):
     print(f"Running design: {design.dir}")
     prj_path = design.prj_path.resolve().absolute()
 
-    # optimizer = RandomSearchOptimizer(
-    #     design.solution_dir,
-    #     env_vars_extra={
-    #         "PRJ_PATH": str(prj_path),
-    #     },
-    #     n_samples=100_000,
-    # )
-
-    # optimizer = GroupRandomSearchOptimizer(
-    #     design.solution_dir,
-    #     env_vars_extra={
-    #         "PRJ_PATH": str(prj_path),
-    #     },
-    #     n_samples=10_000,
-    # )
-
-    optimizer = GroupExhaustiveOptimizer(
+    sim_env = LSEnv(
         design.solution_dir,
         env_vars_extra={
             "PRJ_PATH": str(prj_path),
         },
+    )
+
+    optimizer = RandomSearchOptimizer(
+        sim_env,
+        n_samples=100_000,
+    )
+
+    optimizer = GroupRandomSearchOptimizer(
+        sim_env,
+        n_samples=10_000,
+    )
+
+    optimizer = GroupExhaustiveOptimizer(
+        sim_env,
         size_limit=100_000,
     )
 
-    # optimizer = GAOptimizer(
-    #     design.solution_dir,
-    #     env_vars_extra={
-    #         "PRJ_PATH": str(prj_path),
-    #     },
-    #     n_gen=20,
-    #     pop_size=1000,
-    # )
+    optimizer = GAOptimizer(
+        sim_env,
+        n_gen=20,
+        pop_size=1000,
+    )
 
-    # optimizer = SimulatedAnnealingOptimizer(
-    #     design.solution_dir,
-    #     env_vars_extra={
-    #         "PRJ_PATH": str(prj_path),
-    #     },
-    # )
+    optimizer = SimulatedAnnealingOptimizer(
+        sim_env,
+    )
 
-    # optimizer = HuristicOptimizer(
-    #     design.solution_dir,
-    #     env_vars_extra={
-    #         "PRJ_PATH": str(prj_path),
-    #     },
-    # )
+    optimizer = HuristicOptimizer(
+        sim_env,
+    )
 
-    result_baseline = optimizer.eval_solution_default()
+    result_baseline = sim_env.eval_solution_default()
     assert result_baseline.deadlock is False
     baseline_latency = result_baseline.latency
     baseline_bram_usage_total = result_baseline.bram_usage_total
+
+    assert baseline_latency is not None
+    assert baseline_bram_usage_total is not None
 
     try:
         results = optimizer.solve()

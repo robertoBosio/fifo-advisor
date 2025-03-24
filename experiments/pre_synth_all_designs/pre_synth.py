@@ -3,8 +3,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from dotenv import dotenv_values
-from fifo_opt.automation import TestCase
 from joblib import Parallel, delayed
+
+from fifo_opt.automation import TestCase
 
 DIR_CURRENT = Path(__file__).parent
 

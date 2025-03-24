@@ -1,22 +1,14 @@
 import argparse
 from pathlib import Path
 
+from fifo_opt.opt_env import LSEnv
 from fifo_opt.solvers import RandomSearchOptimizer
 
 
 def main(args):
     solution_dir: Path = args.solution_dir
-
-    # 1. Load the design into the lihgtningsim model for exploration
-    # build lightningsim trace
-    # parse trace into lightningsim model
-    # extract design fifos and initial fifo depths
-
-    # 2. Run optimization algorithms to find FIFO depth soltuions
-
-    # 3. Provide the user with the results via logging, files, or a web interface.
-
-    optimizer = RandomSearchOptimizer(solution_dir)
+    sim_env = LSEnv(solution_dir)
+    optimizer = RandomSearchOptimizer(sim_env)
     optimizer.solve()
 
 

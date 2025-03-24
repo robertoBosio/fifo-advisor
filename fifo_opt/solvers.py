@@ -19,7 +19,7 @@ from pymoo.operators.sampling.rnd import IntegerRandomSampling
 from pymoo.optimize import minimize as minimize_pymoo
 from scipy.optimize import Bounds, dual_annealing, minimize
 
-from fifo_opt.opt_env import EvalResult, FIFOOptimizer
+from fifo_opt.opt_env import EvalResult, FIFOOptimizer, LSEnv
 
 
 class ROUND_TYPE(enum.Enum):
@@ -56,8 +56,8 @@ def compute_dual_obj_scaling_factors(N_points: int) -> np.ndarray:
 
 
 class RandomSearchOptimizer(FIFOOptimizer):
-    def __init__(self, *args, n_samples: int = 100, seed: int = 7, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, sim_env: LSEnv, n_samples: int = 100, seed: int = 7):
+        super().__init__(sim_env)
 
         self.n_samples = n_samples
         self.seed = seed
@@ -65,9 +65,9 @@ class RandomSearchOptimizer(FIFOOptimizer):
 
     def solve(self) -> list[EvalResult]:
         fifos_dse_space = {}
-        for fifo in self.fifos:
+        for fifo in self.sim_env.fifos:
             fifo_id = fifo.id
-            fifo_depths = self.trace_base.compiled.get_fifo_design_space(
+            fifo_depths = self.sim_env.trace_base.compiled.get_fifo_design_space(
                 [fifo_id], fifo.width
             )
             fifos_dse_space[fifo_id] = fifo_depths
@@ -83,14 +83,19 @@ class RandomSearchOptimizer(FIFOOptimizer):
         # for sample_config in sampled_configs:
         #     result = self.eval_solution_single(sample_config)
         #     results.append(result)
-        results = self.eval_solution_parallel(sampled_configs)
+        results: list[EvalResult] = self.sim_env.eval_solution_parallel(sampled_configs)
 
         return results
 
 
 class GroupRandomSearchOptimizer(FIFOOptimizer):
-    def __init__(self, *args, n_samples: int = 100, seed: int = 7, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        sim_env: LSEnv,
+        n_samples: int = 100,
+        seed: int = 7,
+    ):
+        super().__init__(sim_env)
 
         self.n_samples = n_samples
         self.seed = seed
@@ -99,13 +104,13 @@ class GroupRandomSearchOptimizer(FIFOOptimizer):
     def solve(self) -> list[EvalResult]:
         print("Collecting random samples for each FIFO group...")
         fifo_groups = defaultdict(list)
-        for fifo in self.fifos:
+        for fifo in self.sim_env.fifos:
             fifo_groups[fifo.get_display_name()].append(fifo)
 
         fifo_groups_depths = {}
         for fifo_group, fifos in fifo_groups.items():
             fifo_groups_depths[fifo_group] = (
-                self.trace_base.compiled.get_fifo_design_space(
+                self.sim_env.trace_base.compiled.get_fifo_design_space(
                     [fifo.id for fifo in fifos], fifos[0].width
                 )
             )
@@ -120,13 +125,13 @@ class GroupRandomSearchOptimizer(FIFOOptimizer):
             sampled_configs.append(sample)
 
         print("Evaluating random samples...")
-        results = self.eval_solution_parallel(sampled_configs)
+        results = self.sim_env.eval_solution_parallel(sampled_configs)
         return results
 
 
 class GroupExhaustiveOptimizer(FIFOOptimizer):
-    def __init__(self, *args, size_limit: int = 10_000, seed: int = 7, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, sim_env: LSEnv, size_limit: int = 10_000, seed: int = 7):
+        super().__init__(sim_env)
 
         self.size_limit = size_limit
         self.seed = seed
@@ -135,13 +140,13 @@ class GroupExhaustiveOptimizer(FIFOOptimizer):
     def solve(self) -> list[EvalResult]:
         print("Collecting random samples for each FIFO group...")
         fifo_groups = defaultdict(list)
-        for fifo in self.fifos:
+        for fifo in self.sim_env.fifos:
             fifo_groups[fifo.get_display_name()].append(fifo)
 
         fifo_groups_depths = {}
         for fifo_group, fifos in fifo_groups.items():
             fifo_groups_depths[fifo_group] = (
-                self.trace_base.compiled.get_fifo_design_space(
+                self.sim_env.trace_base.compiled.get_fifo_design_space(
                     [fifo.id for fifo in fifos], fifos[0].width
                 )
             )
@@ -175,7 +180,7 @@ class GroupExhaustiveOptimizer(FIFOOptimizer):
         )
 
         print("Evaluating random samples...")
-        results = self.eval_solution_parallel(samples)
+        results = self.sim_env.eval_solution_parallel(samples)
         return results
 
 
@@ -221,7 +226,7 @@ class FIFOOptProblemInt(Problem):
             fifo_sizes.append(
                 {fifo_id: size for fifo_id, size in zip(self.fifo_ids, solution)}
             )
-        results = self.fifo_optmizer_obj.eval_solution_parallel(fifo_sizes)
+        results = self.fifo_optmizer_obj.sim_env.eval_solution_parallel(fifo_sizes)
         F = np.zeros((len(results), 2))
         G = np.zeros((len(results), 1))
         for i, result in enumerate(results):
@@ -248,33 +253,41 @@ class ResultsHistoryTracker(Callback):
         for x in X:
             fifo_sizes = {fifo_id: size for fifo_id, size in zip(self.fifo_ids, x)}
             fifo_configs.append(fifo_sizes)
-        results = self.fifo_optmizer_obj.eval_solution_parallel(fifo_configs)
+        results = self.fifo_optmizer_obj.sim_env.eval_solution_parallel(fifo_configs)
         self.all_results.extend(results)
 
 
 class GAOptimizer(FIFOOptimizer):
     def __init__(
-        self, *args, seed: int = 7, n_gen: int = 10, pop_size: int = 100, **kwargs
+        self,
+        sim_env: LSEnv,
+        seed: int = 7,
+        n_gen: int = 10,
+        pop_size: int = 100,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            sim_env,
+        )
 
         self.seed = seed
         self.n_gen = n_gen
         self.pop_size = pop_size
 
         # check that all values in fifo_sizes_base are not none
-        if any(fifo_size is None for fifo_size in self.fifo_sizes_base.values()):
+        if any(
+            fifo_size is None for fifo_size in self.sim_env.fifo_sizes_base.values()
+        ):
             raise ValueError(
                 "All fifo sizes must have a default value to have some kind of upper bound for the optimization."
             )
 
-        self.fifo_ids = [fifo.id for fifo in self.fifos]
+        self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
 
         self.problem = FIFOOptProblemInt(
             self,
-            n_fifos=self.num_fifos,
+            n_fifos=self.sim_env.num_fifos,
             fifo_ids=self.fifo_ids,
-            fifo_upper_bounds=self.fifo_sizes_base,
+            fifo_upper_bounds=self.sim_env.fifo_sizes_base,
         )
 
         self.algorithm = NSGA2(
@@ -312,11 +325,11 @@ class BayesianOptimizer(FIFOOptimizer):
 
 
 class SimulatedAnnealingOptimizer(FIFOOptimizer):
-    def __init__(self, *args, round_type: ROUND_TYPE = ROUND_TYPE.RINT, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, sim_env: LSEnv, round_type: ROUND_TYPE = ROUND_TYPE.RINT):
+        super().__init__(sim_env)
         self.round_type = round_type
 
-        self.fifo_ids = [fifo.id for fifo in self.fifos]
+        self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
         self.n_scaling_factors = 8
         self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
             self.n_scaling_factors
@@ -337,7 +350,7 @@ class SimulatedAnnealingOptimizer(FIFOOptimizer):
                 x = round(x, self.round_type).astype(int)
                 sample = dict(zip(self.fifo_ids, x))  # Directly construct dictionary
 
-                y = self.eval_solution_single(sample)
+                y = self.sim_env.eval_solution_single(sample)
                 results_all.append(y)
 
                 if y.deadlock:
@@ -369,61 +382,10 @@ class SimulatedAnnealingOptimizer(FIFOOptimizer):
             sol_sample = {
                 fifo_id: size for fifo_id, size in zip(self.fifo_ids, x_python_int)
             }
-            sol_eval_results = self.eval_solution_single(sol_sample)
+            sol_eval_results = self.sim_env.eval_solution_single(sol_sample)
             results.append(sol_eval_results)
 
         return results_all
-
-
-# from collections import deque
-# from tqdm import tqdm
-
-# def format_latency(cycles: int):
-#     pluralized_cycles = "cycles" if cycles != 1 else "cycle"
-#     formatted = f"{cycles:,d} {pluralized_cycles}"
-#     if frequency is not None:
-#         latency_ms = cycles * 1e3 / frequency
-#         formatted += f" ({latency_ms:,.3f} ms)"
-#     return formatted
-
-# def try_depths(dfg, test_depths):
-#     try:
-#         test_latency = dfg.with_depths(test_depths).get_latency(show_progress=False)
-#     except AssertionError:
-#         return None
-#     else:
-#         return test_latency[DFGEndpoint.END]
-
-# try:
-#     opt_depths_step_1
-# except NameError:
-#     opt_depths_step_1 = dict(depths)
-#     tested_step_1 = set()
-
-# import concurrent.futures
-# with concurrent.futures.ProcessPoolExecutor(max_workers=32) as executor:
-#     test_streams = sorted([stream for stream, depth in depths.items() if depth > 2 and stream not in tested_step_1], key=lambda stream: -depths[stream])
-#     print("Before:", sum(opt_depths_step_1.values()), "sum-of-depths with", sum(1 for depth in opt_depths_step_1.values() if depth > 2), "streams with depth > 2")
-#     print("Submitting", len(test_streams), "jobs for parallel execution...")
-#     print("(Progress information will not be shown)")
-#     future_to_stream = {executor.submit(try_depths, dfg, {**opt_depths_step_1, stream: 2}): stream for stream in test_streams}
-#     for i, future in enumerate(concurrent.futures.as_completed(future_to_stream)):
-#         stream = future_to_stream[future]
-#         test_cycles = future.result()
-#         prefix = f"({i + 1}/{len(test_streams)})"
-#         print(prefix, "Trying stream", stream.name, f"({opt_depths_step_1[stream]} to 2)...")
-#         if test_cycles is None:
-#             print(prefix, "Deadlocked.")
-#         else:
-#             print(prefix, "New latency is", format_latency(test_cycles))
-#             print(prefix, "This is", f"{test_cycles / baseline_latency[DFGEndpoint.END] - 1:.1%}", "higher than baseline latency of", format_latency(baseline_latency[DFGEndpoint.END]))
-#             if test_cycles > 1.01 * baseline_latency[DFGEndpoint.END]:
-#                 print(prefix, "Rejected.")
-#             else:
-#                 opt_depths_step_1[stream] = 2
-#                 print(prefix, "Accepted. Now:", sum(1 for depth in opt_depths_step_1.values() if depth > 2), "streams with depth > 2")
-#             tested_step_1.add(stream)
-#     print("After optimization step 1:", sum(opt_depths_step_1.values()), "sum-of-depths with", sum(1 for depth in opt_depths_step_1.values() if depth
 
 
 class HuristicOptimizer(FIFOOptimizer):
@@ -435,11 +397,11 @@ class HuristicOptimizer(FIFOOptimizer):
             print(f"Running heuristic optimization for level: {level}...")
 
             base_depths = {}
-            for fifo, fifo_io in self.simulation_base.fifo_io.items():
+            for fifo, fifo_io in self.sim_env.simulation_base.fifo_io.items():
                 fifo_id = fifo.id
                 base_depths[fifo_id] = max(fifo_io.get_observed_depth(), 2)
 
-            eval_results = self.eval_solution_single(base_depths)
+            eval_results = self.sim_env.eval_solution_single(base_depths)
             all_evals.append(eval_results)
             assert not eval_results.deadlock
 
@@ -464,7 +426,7 @@ class HuristicOptimizer(FIFOOptimizer):
             for fifo_id in fifo_ids_larger_than_two:
                 new_sample = deepcopy(working_set_of_depths)
                 new_sample[fifo_id] = 2
-                eval_results_case = self.eval_solution_single(new_sample)
+                eval_results_case = self.sim_env.eval_solution_single(new_sample)
                 all_evals.append(eval_results_case)
                 if eval_results_case.deadlock:
                     continue
@@ -474,7 +436,9 @@ class HuristicOptimizer(FIFOOptimizer):
 
                 working_set_of_depths[fifo_id] = 2
 
-            eval_results_final = self.eval_solution_single(working_set_of_depths)
+            eval_results_final = self.sim_env.eval_solution_single(
+                working_set_of_depths
+            )
             all_evals.append(eval_results_final)
             assert not eval_results_final.deadlock
 
