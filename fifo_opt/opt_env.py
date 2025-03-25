@@ -84,9 +84,9 @@ class LSEnv:
         self.fifos = self.trace_base.fifos
         self.num_fifos = len(self.trace_base.fifos)
 
-        self.fifo_sizes_base = {}
+        self.fifo_sizes_base: dict[int, int | None] = {}
         for fifo in self.fifos:
-            fifo_id = fifo.id
+            fifo_id: int = fifo.id
             fifo_depth: int | None = self.trace_base.params.fifo_depths[fifo_id]
             self.fifo_sizes_base[fifo_id] = fifo_depth
 
@@ -162,7 +162,15 @@ class LSEnv:
         return results
 
     def eval_solution_default(self) -> EvalResult:
-        return self.eval_solution_single(self.fifo_sizes_base)
+        fifo_sizes_base_not_none = {}
+        for fifo_id, fifo_size in self.fifo_sizes_base.items():
+            if fifo_size is not None:
+                fifo_sizes_base_not_none[fifo_id] = fifo_size
+            else:
+                raise ValueError(
+                    f"FIFO size for FIFO {fifo_id} is None. Please set a valid FIFO size."
+                )
+        return self.eval_solution_single(fifo_sizes_base_not_none)
 
     # @abstractmethod
     # def solve(self) -> list[EvalResult]: ...

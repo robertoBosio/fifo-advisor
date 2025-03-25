@@ -1,0 +1,17 @@
+latency,bram,latency_bram_product,design_name
+40073,800,32058400,Autoencoder__opt5
+134542,672,90412224,DepthwiseSeparableConvBlock__opt5
+65998,2176,143611648,FeedForward__opt5
+39782,2012,80041384,ResMLP__opt5
+2092532,424,887233568,ResidualBlock__opt5
+2181,650,1417650,atax__opt5
+1112,50,55600,bicg__opt5
+24051,176,4232976,gemm__opt5
+675,60,40500,gesummv__opt5
+36352,256,9306112,k2mm__opt5
+49092,325,15954900,k3mm__opt5
+5684,224,1273216,k7mmseq_balanced__opt5
+10036,216,2167776,k7mmseq_unbalanced__opt5
+8262,224,1850688,k7mmtree_balanced__opt5
+8750,256,2240000,k7mmtree_unbalanced__opt5
+668,576,384768,mvt__opt5

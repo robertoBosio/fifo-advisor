@@ -388,7 +388,7 @@ class SimulatedAnnealingOptimizer(FIFOOptimizer):
         return results_all
 
 
-class HuristicOptimizer(FIFOOptimizer):
+class HeuristicOptimizer(FIFOOptimizer):
     level_sets = [0.01, 0.05, 0.1, 0.2, 0.5, 1.0]
 
     def solve(self) -> list[EvalResult]:

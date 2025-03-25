@@ -1,9 +1,12 @@
+import itertools
 import shutil
+from functools import partial
 from pathlib import Path
 from pprint import pp
 from tempfile import TemporaryDirectory
 
 import numpy as np
+import pandas as pd
 from dotenv import dotenv_values
 from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
@@ -14,7 +17,7 @@ from fifo_opt.solvers import (
     GAOptimizer,
     GroupExhaustiveOptimizer,
     GroupRandomSearchOptimizer,
-    HuristicOptimizer,
+    HeuristicOptimizer,
     RandomSearchOptimizer,
     SimulatedAnnealingOptimizer,
 )
@@ -25,6 +28,9 @@ DIR_FIGURES = DIR_CURRENT / "figures"
 if not DIR_FIGURES.exists():
     DIR_FIGURES.mkdir(exist_ok=True)
 
+DIR_DATA = DIR_CURRENT / "data"
+if not DIR_DATA.exists():
+    DIR_DATA.mkdir(exist_ok=True)
 
 ENV_FILE: Path = DIR_CURRENT / ".env"
 if ENV_FILE.exists():
@@ -46,8 +52,8 @@ else:
 
 
 designs_all_dirs = sorted([d for d in DIR_PRE_SYNTH.glob("*") if d.is_dir()])
-# sort by total dir size
-# designs_all_dirs.sort(key=lambda d: sum(f.stat().st_size for f in d.rglob("*")))
+
+
 designs_all = [
     TestCase.from_dir(design_dir, design_dir.name.split("__")[0])
     for design_dir in designs_all_dirs
@@ -62,45 +68,12 @@ designs_all = [
 
 designs_all = [design for design in designs_all if design.dir.name.endswith("__opt5")]
 
-# designs_to_keep = ["Autoencoder"]
-# designs_all = [
-#     design
-#     for design in designs_all
-#     if any(design.name.startswith(d) for d in designs_to_keep)
-# ]
-
-
-pp(list(map(lambda x: x.dir.name, designs_all)))
-
-
-# I want to test deigsnt o see which ones take longer than X seconds to call RandomSearchOptimizer
-#  I want to recoed any that take less than 30 seconds
-# i need to check for a timeout
-
-
-# def check_design_time(design: TestCase) -> bool:
-#     prj_path = design.prj_path.resolve().absolute()
-#     with TemporaryDirectory() as tmp_dir:
-#         shutil.copytree(prj_path, tmp_dir, dirs_exist_ok=True)
-#         optimizer_random_search = RandomSearchOptimizer(
-#             Path(tmp_dir),
-#             env_vars_extra={
-#                 "PRJ_PATH": str(prj_path),
-#             },
-#             n_samples=100,
-#         )
-#         try:
-#             optimizer_random_search.solve()
-#             return True
-#         except Exception as e:
-#             print(f"Error in design {design.dir}: {e}")
-#             return False
-
-
 designs_all_filtered = designs_all[:]
 
+data_baseline = []
 
-def eval_one_design(design):
+
+def run_baseline_eval(design: TestCase):
     print(f"Running design: {design.dir}")
     prj_path = design.prj_path.resolve().absolute()
 
@@ -111,42 +84,68 @@ def eval_one_design(design):
         },
     )
 
-    optimizer = RandomSearchOptimizer(
-        sim_env,
-        n_samples=100_000,
-    )
+    baseline_results = sim_env.eval_solution_default()
+    assert baseline_results.deadlock is False
 
-    optimizer = GroupRandomSearchOptimizer(
-        sim_env,
-        n_samples=10_000,
-    )
-
-    optimizer = GroupExhaustiveOptimizer(
-        sim_env,
-        size_limit=100_000,
-    )
-
-    optimizer = GAOptimizer(
-        sim_env,
-        n_gen=20,
-        pop_size=1000,
-    )
-
-    optimizer = SimulatedAnnealingOptimizer(
-        sim_env,
-    )
-
-    optimizer = HuristicOptimizer(
-        sim_env,
-    )
-
-    result_baseline = sim_env.eval_solution_default()
-    assert result_baseline.deadlock is False
-    baseline_latency = result_baseline.latency
-    baseline_bram_usage_total = result_baseline.bram_usage_total
-
+    baseline_latency = baseline_results.latency
+    baseline_bram_usage_total = baseline_results.bram_usage_total
     assert baseline_latency is not None
     assert baseline_bram_usage_total is not None
+
+    baseline_latency_bram_product = baseline_latency * baseline_bram_usage_total
+
+    data_baseline.append(
+        {
+            "latency": baseline_latency,
+            "bram": baseline_bram_usage_total,
+            "latency_bram_product": baseline_latency_bram_product,
+            "design_name": design.dir.name,
+        }
+    )
+
+
+for design in designs_all_filtered:
+    run_baseline_eval(design)
+
+
+df_baseline = pd.DataFrame(data_baseline)
+df_baseline.to_csv(DIR_DATA / "data_baseline.csv", index=False)
+
+exit()
+
+optimizers = {
+    "random_search": partial(
+        RandomSearchOptimizer,
+        n_samples=100_000,
+    ),
+    "group_random_search": partial(
+        GroupRandomSearchOptimizer,
+        n_samples=10_000,
+    ),
+    "heuristic": partial(
+        HeuristicOptimizer,
+    ),
+}
+
+
+def run_single_eval(design: TestCase, optimizer_name):
+    data_points = []
+    data_search_counts = []
+
+    print(f"Running design: {design.dir}")
+    prj_path = design.prj_path.resolve().absolute()
+
+    sim_env = LSEnv(
+        design.solution_dir,
+        env_vars_extra={
+            "PRJ_PATH": str(prj_path),
+        },
+    )
+
+    optimizer_class = optimizers[optimizer_name]
+    optimizer = optimizer_class(
+        sim_env,
+    )
 
     try:
         results = optimizer.solve()
@@ -159,6 +158,16 @@ def eval_one_design(design):
     n_total = len(results)
     n_no_deadlock = len(results_no_deadlock)
     n_deadlock = len(results) - n_no_deadlock
+
+    data_search_counts.append(
+        {
+            "design_name": design.dir.name,
+            "optimizer_name": optimizer_name,
+            "n_total": n_total,
+            "n_no_deadlock": n_no_deadlock,
+            "n_deadlock": n_deadlock,
+        }
+    )
 
     pareto_mask = is_pareto_efficient_simple(results_no_deadlock)
 
@@ -183,75 +192,48 @@ def eval_one_design(design):
         if is_efficient
     ]
 
-    fig, ax = plt.subplots(1, 1, figsize=(6, 6))
-
-    ax.grid(which="both", linestyle="--", linewidth=0.5)
-    ax.grid(which="major", linestyle="--", linewidth=0.8)
-    ax.set_axisbelow(True)
-    ax.scatter(vals_bram_usage_total, vals_latency)
-
-    vals_latency_pareto_sorted, vals_bram_usage_total_pareto_sorted = zip(
-        *sorted(
-            zip(vals_latency_pareto, vals_bram_usage_total_pareto),
-            key=lambda x: (x[1], x[0]),
+    latency_bram_products = [
+        latency * bram_usage
+        for latency, bram_usage in zip(
+            vals_latency_pareto, vals_bram_usage_total_pareto
         )
-    )
-    ax.plot(
-        vals_bram_usage_total_pareto_sorted,
-        vals_latency_pareto_sorted,
-        marker="o",
-        color="red",
-        label="Pareto Front",
-        linestyle="--",
-    )
+    ]
 
-    ax.scatter(
-        baseline_bram_usage_total,
-        baseline_latency,
-        marker="*",
-        color="green",
-        label="Baseline",
-        s=100,
-    )
+    points_to_add = []
+    for latency, bram_usage, latency_bram_product in zip(
+        vals_latency_pareto, vals_bram_usage_total_pareto, latency_bram_products
+    ):
+        points_to_add.append(
+            {
+                "latency": latency,
+                "bram": bram_usage,
+                "latency_bram_product": latency_bram_product,
+                "design_name": design.dir.name,
+                "optimizer_name": optimizer_name,
+            }
+        )
 
-    ax.set_xlabel("BRAM Usage Total")
-    ax.set_ylabel("Latency")
-    ax.set_title(
-        f'FIFO Design Space for Design "{design.dir.name}"\nSolver: {optimizer.__class__.__name__}'
-    )
+    data_points.extend(points_to_add)
 
-    # x_min = 0
-    # x_max = max(vals_bram_usage_total) * 1.1
-    # ax.set_xlim(x_min, x_max)
-
-    # def round_down_to_nearest_power_of_10(x):
-    #     if x <= 0:
-    #         return 0
-    #     power = int(np.floor(np.log10(x)))
-    #     return 10**power
-
-    # def round_up_to_nearest_power_of_10(x):
-    #     if x <= 0:
-    #         return 0
-    #     power = int(np.ceil(np.log10(x)))
-    #     return 10**power
-
-    # y_min = round_down_to_nearest_power_of_10(min(vals_latency)) * 0.9
-    # y_max = round_up_to_nearest_power_of_10(max(vals_latency)) * 1.1
-    # ax.set_ylim(y_min, y_max)
-
-    # ax.set_yscale("log")
-
-    fig.tight_layout()
-
-    fig_path = (
-        DIR_FIGURES
-        / f"{design.dir.name}__{optimizer.__class__.__name__}__latency_vs_bram.png"
-    )
-    fig.savefig(fig_path, dpi=300)
+    return data_points, data_search_counts
 
 
-N_JOBS = 4
-Parallel(n_jobs=N_JOBS, backend="multiprocessing")(
-    delayed(eval_one_design)(design) for design in designs_all_filtered
+N_JOBS = 32
+combos = list(itertools.product(designs_all_filtered, optimizers.keys()))
+data_all = Parallel(n_jobs=N_JOBS, backend="multiprocessing")(
+    delayed(run_single_eval)(design, optimizer_name)
+    for design, optimizer_name in combos
 )
+data_all = [result for result in data_all if result is not None]
+
+all_data_points = []
+all_data_search_counts = []
+for data_points, data_search_counts in data_all:
+    all_data_points.extend(data_points)
+    all_data_search_counts.extend(data_search_counts)
+
+df_points = pd.DataFrame(all_data_points)
+df_search_counts = pd.DataFrame(all_data_search_counts)
+
+df_points.to_csv(DIR_DATA / "data_points.csv", index=False)
+df_search_counts.to_csv(DIR_DATA / "data_search_counts.csv", index=False)
