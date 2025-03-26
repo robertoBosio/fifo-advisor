@@ -11,7 +11,10 @@ DIR_CURRENT = Path(__file__).parent
 
 
 DIR_ROOT = DIR_CURRENT.parent.parent
-DIR_TEST_CASES = DIR_ROOT / "test_cases"
+
+# DIR_TEST_CASES = DIR_ROOT / "test_cases"
+DIR_TEST_CASES = DIR_ROOT / "test_cases_streamhls_large"
+assert DIR_TEST_CASES.exists(), f"Test case dir {DIR_TEST_CASES} does not exist"
 
 
 ENV_FILE: Path = DIR_CURRENT / ".env"
@@ -42,6 +45,8 @@ designs_to_ignore: list[str] = []
 designs_to_test = [
     design for design in designs_to_test if design not in designs_to_ignore
 ]
+
+print(designs_to_test)
 
 N_JOBS = 24
 

@@ -8,6 +8,14 @@ latency,bram,latency_bram_product,design_name
 1112,50,55600,bicg__opt5
 24051,176,4232976,gemm__opt5
 675,60,40500,gesummv__opt5
+61052,376,22955552,k15mmseq__opt5
+7802,118,920636,k15mmseq_imbalanced__opt5
+28838,464,13380832,k15mmseq_relu__opt5
+8504,232,1972928,k15mmseq_relu_imbalanced__opt5
+20326,384,7805184,k15mmtree__opt5
+16237,326,5293262,k15mmtree_imbalanced__opt5
+17277,640,11057280,k15mmtree_relu__opt5
+16490,680,11213200,k15mmtree_relu_imbalanced__opt5
 36352,256,9306112,k2mm__opt5
 49092,325,15954900,k3mm__opt5
 5684,224,1273216,k7mmseq_balanced__opt5

@@ -1,0 +1,35 @@
+\begin{table}[th]
+\caption{Relative hypervolume of the pareto front found by each optimizer relative to the baseline "Random Search" optimizer for all designs. The higher the hypervolume the better the discovered pareto front. The reference point used for the hypervolume calculation is $(1.1*\text{bram}_\text{baseline}, 1.1*\text{latency}_\text{max})$, where $\text{bram}_\text{baseline}$ is the BRAM usage of the baseline design and $\text{latency}_\text{max}$ is the maximum latency of all designs.}
+\label{tab:hypervolume}
+\begin{tabular}{l|ccccccc}
+\toprule
+Design Name & Discrete Simulated Annealing & Group Random Search & grouped\_discrete\_simulated\_annealing & Heuristic & Seeded Simulated Annealing & Random Search \\
+\midrule
+Autoencoder & 1.20x & 1.96x & 2.01x & 0.97x & 1.96x & 1.00x \\
+DepthwiseSeparableConvBlock & 1.11x & 1.76x & 1.76x & 1.66x & 1.76x & 1.00x \\
+FeedForward & 4.25x & 7.30x & 7.30x & 7.00x & 7.30x & 1.00x \\
+ResidualBlock & 0.99x & 1.43x & 1.43x & 1.43x & 1.43x & 1.00x \\
+atax & 1.01x & 1.93x & 1.93x & 0.35x & 1.93x & 1.00x \\
+bicg & 1.24x & 1.24x & 1.24x & 1.24x & 1.24x & 1.00x \\
+gemm & 0.99x & 1.67x & 1.67x & 1.67x & 1.67x & 1.00x \\
+gesummv & 1.35x & 1.35x & 1.35x & 1.35x & 1.35x & 1.00x \\
+k15mmseq & 1.06x & 1.80x & 1.89x & 1.04x & 1.80x & 1.00x \\
+k15mmseq\_imbalanced & 1.22x & 1.61x & 1.69x & 0.29x & 1.63x & 1.00x \\
+k15mmseq\_relu & 1.18x & 2.90x & 3.32x & 2.26x & 2.90x & 1.00x \\
+k15mmseq\_relu\_imbalanced & 1.17x & 1.64x & 1.78x & 1.11x & 1.64x & 1.00x \\
+k15mmtree & 3.52x & 9.07x & 9.92x & 7.40x & 9.07x & 1.00x \\
+k15mmtree\_imbalanced & 0.96x & 1.91x & 1.90x & 1.05x & 1.91x & 1.00x \\
+k15mmtree\_relu & 1.06x & 3.27x & 3.99x & 2.99x & 3.27x & 1.00x \\
+k15mmtree\_relu\_imbalanced & 1.05x & 1.89x & 2.04x & 1.41x & 1.89x & 1.00x \\
+k2mm & 4.13x & 6.11x & 6.11x & 5.58x & 6.11x & 1.00x \\
+k3mm & 1.09x & 5.05x & 5.05x & 3.82x & 5.05x & 1.00x \\
+k7mmseq\_balanced & 1.92x & 8.83x & 8.83x & 2.62x & 8.83x & 1.00x \\
+k7mmseq\_unbalanced & 1.05x & 4.02x & 4.02x & 0.68x & 4.02x & 1.00x \\
+k7mmtree\_unbalanced & 1.15x & 3.36x & 3.36x & 1.94x & 3.36x & 1.00x \\
+mvt & 0.97x & 6.70x & 6.70x & 6.70x & 6.70x & 1.00x \\
+\hline
+Geomean & 1.34x & 2.80x & 2.89x & 1.74x & 2.80x & 1.00x & \\
+\bottomrule
+
+\end{tabular}
+\end{table}

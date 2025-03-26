@@ -217,3 +217,8 @@ def is_pareto_efficient_simple(eval_results: list[EvalResult]) -> list[bool]:
     is_efficient_list = is_efficient.tolist()
     is_efficient_list_bool = [bool(v) for v in is_efficient_list]
     return is_efficient_list_bool
+
+
+def solution_to_config(solution: dict[int, int]) -> list[str]:
+    config = []
+    return config

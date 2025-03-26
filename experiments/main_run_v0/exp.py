@@ -1,5 +1,7 @@
 import itertools
+import multiprocessing
 import shutil
+from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
 from pprint import pp
@@ -12,14 +14,18 @@ from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
 
 from fifo_opt.automation import TestCase
-from fifo_opt.opt_env import LSEnv, is_pareto_efficient_simple
+from fifo_opt.opt_env import FIFOOptimizer, LSEnv, is_pareto_efficient_simple
 from fifo_opt.solvers import (
+    DiscreteSimulatedAnnealingOptimizer,
     GAOptimizer,
+    GroupedDiscreteSimulatedAnnealingOptimizer,
     GroupExhaustiveOptimizer,
+    GroupRandomInitializedSimulatedAnnealingOptimizer,
     GroupRandomSearchOptimizer,
     HeuristicOptimizer,
     RandomSearchOptimizer,
     SimulatedAnnealingOptimizer,
+    T_FIFOOptimizer,
 )
 
 DIR_CURRENT = Path(__file__).parent
@@ -111,24 +117,35 @@ for design in designs_all_filtered:
 df_baseline = pd.DataFrame(data_baseline)
 df_baseline.to_csv(DIR_DATA / "data_baseline.csv", index=False)
 
-exit()
 
-optimizers = {
+optimizers: dict[str, partial[T_FIFOOptimizer]] = {
     "random_search": partial(
         RandomSearchOptimizer,
-        n_samples=100_000,
+        n_samples=1000,
     ),
     "group_random_search": partial(
         GroupRandomSearchOptimizer,
-        n_samples=10_000,
+        n_samples=1000,
     ),
     "heuristic": partial(
         HeuristicOptimizer,
     ),
+    "init_simulated_annealing": partial(
+        GroupRandomInitializedSimulatedAnnealingOptimizer,
+        n_samples=1000,
+    ),
+    "discrete_simulated_annealing": partial(
+        DiscreteSimulatedAnnealingOptimizer,
+        maxfun=1000,
+    ),
+    "grouped_discrete_simulated_annealing": partial(
+        GroupedDiscreteSimulatedAnnealingOptimizer,
+        maxfun=1000,
+    ),
 }
 
 
-def run_single_eval(design: TestCase, optimizer_name):
+def run_single_eval(design: TestCase, optimizer_name: str):
     data_points = []
     data_search_counts = []
 
@@ -218,12 +235,24 @@ def run_single_eval(design: TestCase, optimizer_name):
     return data_points, data_search_counts
 
 
-N_JOBS = 32
+N_JOBS = 52
 combos = list(itertools.product(designs_all_filtered, optimizers.keys()))
-data_all = Parallel(n_jobs=N_JOBS, backend="multiprocessing")(
-    delayed(run_single_eval)(design, optimizer_name)
-    for design, optimizer_name in combos
-)
+
+# data_all = Parallel(n_jobs=N_JOBS, backend="loky", timeout=300)(
+#     delayed(run_single_eval)(design, optimizer_name)
+#     for design, optimizer_name in combos
+# )
+
+# with multiprocessing.Pool(N_JOBS) as pool:
+#     data_all = pool.starmap(
+#         run_single_eval,
+#         combos,
+#         chunksize=1,
+#     )
+
+with ThreadPoolExecutor(max_workers=N_JOBS) as executor:
+    data_all = executor.map(lambda x: run_single_eval(*x), combos)
+
 data_all = [result for result in data_all if result is not None]
 
 all_data_points = []

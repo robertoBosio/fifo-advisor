@@ -1,14 +1,12 @@
 import os
-from pathlib import Path
-from dataclasses import dataclass
 import shutil
-
 import subprocess
+from dataclasses import dataclass
+from pathlib import Path
 from typing import TypeVar
 
-
-
 T_unwrap = TypeVar("T_unwrap")
+
 
 def unwrap(value: T_unwrap | None, error_message: str | None = None) -> T_unwrap:
     if value is None:
@@ -24,6 +22,7 @@ def check_key(key: str | None) -> str:
         raise ValueError("API key not found in .env file")
     else:
         return key
+
 
 def auto_find_vitis_hls_dir() -> Path | None:
     vitis_hls_bin_path_str = shutil.which("vitis_hls")
@@ -85,6 +84,7 @@ def auto_find_vitis_hls_lib_paths() -> list[Path] | None:
 
     return lib_paths
 
+
 def get_vitis_hls_include_dir() -> Path | None:
     # vitis_hls_dist_path = get_vitis_hls_dist_path()
     vitis_hls_dist_path = auto_find_vitis_hls_dir()
@@ -98,14 +98,15 @@ def get_vitis_hls_include_dir() -> Path | None:
         )
     return vitis_hls_include_dir
 
+
 class TestCase:
     def __init__(self, dir: Path, name: str):
         self.dir = dir
         self.name = name
 
         assert self.dir
-        assert self.kernel_fp
-        assert self.kernel_tb_fp
+        # assert self.kernel_fp
+        # assert self.kernel_tb_fp
         assert self.hls_script_fp
 
     @classmethod
@@ -118,40 +119,48 @@ class TestCase:
         shutil.copytree(self.dir, dest, dirs_exist_ok=True)
         self.dir = dest
 
-    @property
-    def src_dir(self):
-        dir = self.dir / "src"
-        if not dir.exists():
-            raise ValueError(f"Expected src dir in {self.dir}, not found")
-        assert dir.is_dir()
-        return dir
-    
-    @property
-    def kernel_fp(self):
-        src_files = list(self.src_dir.glob("*.cpp"))
-        if len(src_files) != 2:
-            raise ValueError(f"Expected 2 cpp files in {self.src_dir}, found {len(src_files)}")
-        matches = [file for file in src_files if not file.name.endswith("_tb.cpp")]
-        if len(matches) != 1:
-            raise ValueError(f"Expected 1 non-testbench cpp file in {self.src_dir}, found {len(matches)}")
-        fp = matches[0]
-        assert fp.exists()
-        assert fp.is_file()
-        return fp
-    
-    @property
-    def kernel_tb_fp(self):
-        src_files = list(self.src_dir.glob("*.cpp"))
-        if len(src_files) != 2:
-            raise ValueError(f"Expected 2 cpp files in {self.src_dir}, found {len(src_files)}")
-        matches = [file for file in src_files if file.name.endswith("_tb.cpp")]
-        if len(matches) != 1:
-            raise ValueError(f"Expected 1 testbench cpp file in {self.src_dir}, found {len(matches)}")
-        fp = matches[0]
-        assert fp.exists()
-        assert fp.is_file()
-        return fp
-    
+    # @property
+    # def src_dir(self):
+    #     dir = self.dir / "src"
+    #     if not dir.exists():
+    #         raise ValueError(f"Expected src dir in {self.dir}, not found")
+    #     assert dir.is_dir()
+    #     return dir
+
+    # @property
+    # def kernel_fp(self):
+    #     src_files = list(self.src_dir.glob("*.cpp"))
+    #     if len(src_files) != 2:
+    #         raise ValueError(
+    #             f"Expected 2 cpp files in {self.src_dir}, found {len(src_files)}"
+    #         )
+    #     matches = [file for file in src_files if not file.name.endswith("_tb.cpp")]
+    #     if len(matches) != 1:
+    #         raise ValueError(
+    #             f"Expected 1 non-testbench cpp file in {self.src_dir}, found {len(matches)}"
+    #         )
+    #     fp = matches[0]
+    #     assert fp.exists()
+    #     assert fp.is_file()
+    #     return fp
+
+    # @property
+    # def kernel_tb_fp(self):
+    #     src_files = list(self.src_dir.glob("*.cpp"))
+    #     if len(src_files) != 2:
+    #         raise ValueError(
+    #             f"Expected 2 cpp files in {self.src_dir}, found {len(src_files)}"
+    #         )
+    #     matches = [file for file in src_files if file.name.endswith("_tb.cpp")]
+    #     if len(matches) != 1:
+    #         raise ValueError(
+    #             f"Expected 1 testbench cpp file in {self.src_dir}, found {len(matches)}"
+    #         )
+    #     fp = matches[0]
+    #     assert fp.exists()
+    #     assert fp.is_file()
+    #     return fp
+
     @property
     def hls_script_fp(self):
         fp = self.dir / "hls.tcl"
@@ -172,7 +181,7 @@ class TestCase:
         args.append(self.name)
 
         return args
-    
+
     def build_env(self) -> dict[str, str]:
         env = os.environ.copy()
         env["PRJ_PATH"] = str(self.prj_path.resolve())
@@ -182,18 +191,21 @@ class TestCase:
         args = self.build_partial_args()
         args.append("csim")
         env = self.build_env()
-        p = subprocess.run(args, capture_output=True, text=True, bufsize=-1, cwd=self.dir, env=env)
+        p = subprocess.run(
+            args, capture_output=True, text=True, bufsize=-1, cwd=self.dir, env=env
+        )
         if p.returncode != 0:
             print(p.stdout)
             print(p.stderr)
             p.check_returncode()
 
-
     def run_synth(self):
         args = self.build_partial_args()
         args.append("syn")
         env = self.build_env()
-        p = subprocess.run(args, capture_output=True, text=True, bufsize=-1, cwd=self.dir, env=env)
+        p = subprocess.run(
+            args, capture_output=True, text=True, bufsize=-1, cwd=self.dir, env=env
+        )
         if p.returncode != 0:
             print(p.stdout)
             print(p.stderr)
@@ -203,7 +215,9 @@ class TestCase:
         args = self.build_partial_args()
         args.append("toCosim")
         env = self.build_env()
-        p = subprocess.run(args, capture_output=True, text=True, bufsize=-1, cwd=self.dir, env=env)
+        p = subprocess.run(
+            args, capture_output=True, text=True, bufsize=-1, cwd=self.dir, env=env
+        )
         if p.returncode != 0:
             print(p.stdout)
             print(p.stderr)
@@ -217,15 +231,15 @@ class TestCase:
             return False
         if len(hls_dir_matches) > 1:
             raise ValueError(f"Found more than one hls dir in {self.dir}")
-        
+
         hls_dir: Path = hls_dir_matches[0]
         solution_dir_path = hls_dir / "solution1"
-        
+
         if not solution_dir_path.exists():
             return False
-        
+
         return True
-    
+
     @property
     def solution_dir(self):
         if not self.has_solution_dir:
@@ -235,7 +249,5 @@ class TestCase:
         solution_dir_path = hls_dir / "solution1"
         return solution_dir_path
 
-    
     def run_lightning_sim(self):
         raise NotImplementedError
-

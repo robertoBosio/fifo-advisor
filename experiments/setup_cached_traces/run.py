@@ -13,10 +13,6 @@ from fifo_opt.opt_env import LSEnv
 
 DIR_CURRENT = Path(__file__).parent
 
-DIR_FIGURES = DIR_CURRENT / "figures"
-if not DIR_FIGURES.exists():
-    DIR_FIGURES.mkdir(exist_ok=True)
-
 
 ENV_FILE: Path = DIR_CURRENT / ".env"
 if ENV_FILE.exists():
