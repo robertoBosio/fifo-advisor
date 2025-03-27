@@ -4,13 +4,10 @@ import pickle
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
-import dill
 import numpy as np
 from lightningsim.model import Solution
 from lightningsim.runner import Runner, RunnerStep
-from lightningsim.trace_file import ResolvedTrace
 
 
 @dataclass

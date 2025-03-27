@@ -1,25 +1,21 @@
 import enum
 import itertools
 import random
-from abc import ABC, abstractmethod
-from collections import defaultdict, deque
+from collections import defaultdict
 from copy import deepcopy
-from enum import Enum
-from functools import cached_property
 from typing import Union
 
 import numpy as np
 from lightningsim.trace_file import ResolvedStream
 from pymoo.algorithms.moo.nsga2 import NSGA2
-from pymoo.algorithms.soo.nonconvex.ga import GA
 from pymoo.core.callback import Callback
-from pymoo.core.problem import ElementwiseProblem, Problem
+from pymoo.core.problem import Problem
 from pymoo.operators.crossover.sbx import SBX
 from pymoo.operators.mutation.pm import PM
 from pymoo.operators.repair.rounding import RoundingRepair
 from pymoo.operators.sampling.rnd import IntegerRandomSampling
 from pymoo.optimize import minimize as minimize_pymoo
-from scipy.optimize import Bounds, dual_annealing, minimize
+from scipy.optimize import Bounds, dual_annealing
 from scipy.optimize._optimize import OptimizeResult
 
 from fifo_opt.opt_env import (
