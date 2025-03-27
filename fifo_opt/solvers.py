@@ -79,6 +79,7 @@ class RandomSearchOptimizer(FIFOOptimizer):
                 [fifo_id], fifo.width
             )
             fifos_dse_space[fifo_id] = fifo_depths
+        print(fifos_dse_space)
 
         sampled_configs = []
         for _ in range(self.n_samples):

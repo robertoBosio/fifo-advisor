@@ -1,6 +1,5 @@
 import shutil
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 from dotenv import dotenv_values
 from joblib import Parallel, delayed

@@ -1,30 +1,20 @@
 import itertools
-import multiprocessing
-import shutil
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
-from pprint import pp
-from tempfile import TemporaryDirectory
 
-import numpy as np
 import pandas as pd
 from dotenv import dotenv_values
-from joblib import Parallel, delayed
-from matplotlib import pyplot as plt
 
 from fifo_opt.automation import TestCase
-from fifo_opt.opt_env import FIFOOptimizer, LSEnv, is_pareto_efficient_simple
+from fifo_opt.opt_env import LSEnv, is_pareto_efficient_simple
 from fifo_opt.solvers import (
     DiscreteSimulatedAnnealingOptimizer,
-    GAOptimizer,
     GroupedDiscreteSimulatedAnnealingOptimizer,
-    GroupExhaustiveOptimizer,
     GroupRandomInitializedSimulatedAnnealingOptimizer,
     GroupRandomSearchOptimizer,
     HeuristicOptimizer,
     RandomSearchOptimizer,
-    SimulatedAnnealingOptimizer,
     T_FIFOOptimizer,
 )
 

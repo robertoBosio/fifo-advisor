@@ -1,12 +1,8 @@
-import shutil
 from pathlib import Path
 from pprint import pp
-from tempfile import TemporaryDirectory
 
-import numpy as np
 from dotenv import dotenv_values
 from joblib import Parallel, delayed
-from matplotlib import pyplot as plt
 
 from fifo_opt.automation import TestCase
 from fifo_opt.opt_env import LSEnv

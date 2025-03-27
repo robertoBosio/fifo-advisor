@@ -1,7 +1,5 @@
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
-from joblib import Parallel, delayed
 
 from fifo_opt.automation import TestCase
 

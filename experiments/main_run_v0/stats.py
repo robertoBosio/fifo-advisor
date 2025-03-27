@@ -1,14 +1,13 @@
 import itertools
 import multiprocessing
 from pathlib import Path
-from pprint import pp
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
-from matplotlib.figure import Figure
+from matplotlib.patches import Rectangle
 
 DIR_CURRENT = Path(__file__).parent
 
@@ -340,7 +339,6 @@ sns.barplot(
     ax=ax_bram,
 )
 
-from matplotlib.patches import Rectangle
 
 for i, bar in enumerate(ax_bram.patches):
     if isinstance(bar, Rectangle) and bar.get_height() < 0.05:
