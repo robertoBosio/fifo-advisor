@@ -62,18 +62,18 @@ optimizer_to_color_map = {
     "random_search": "blue",
     "group_random_search": "green",
     "heuristic": "red",
-    "init_simulated_annealing": "orange",
+    "init_simulated_annealing": "cyan",
     "discrete_simulated_annealing": "purple",
     "grouped_discrete_simulated_annealing": "brown",
 }
 
 optimizer_to_name_map = {
     "random_search": "Random Search",
-    "group_random_search": "Grouped\nRandom Search",
+    "group_random_search": "Grouped Random Search",
     "heuristic": "Heuristic",
     "init_simulated_annealing": "Seeded Simulated Annealing",
-    "discrete_simulated_annealing": "Discrete\nSim. Annealing",
-    "grouped_discrete_simulated_annealing": "Grouped Discrete\nSim. Annealing",
+    "discrete_simulated_annealing": "Sim. Annealing",
+    "grouped_discrete_simulated_annealing": "Grouped Sim. Annealing",
 }
 
 
@@ -616,7 +616,7 @@ fig.suptitle(
 fig.tight_layout(h_pad=0.12)
 fig.savefig(DIR_FIGURES / "__baseline_comparison.png", dpi=300, transparent=True)
 
-exit()
+# exit()
 
 ################################################
 
@@ -749,6 +749,9 @@ def plot_design(design):
 
     df_points_for_this_design = df_points[df_points["design_name"] == design].copy()
 
+    # fomat font size
+    font = {"size": 18}
+    matplotlib.rc("font", **font)
     fig, ax = plt.subplots(figsize=(8, 6))
 
     ax.grid(which="both", linestyle="--", linewidth=0.5)
@@ -795,8 +798,14 @@ def plot_design(design):
             zorder=20,
         )
 
-        max_y = df_points_for_this_design["latency"].max() * 1.1
-        max_x = baseline_bram * 1.1
+        max_y = df_points_for_this_design["latency"].max()
+        max_x = baseline_bram
+
+        if not baseline_dumb_deadlock:
+            max_y = max(max_y, baseline_dumb_latency)
+
+        max_x = max_x * 1.1
+        max_y = max_y * 1.1
 
         vol, points = compute_hypervolume(
             (max_x, max_y),
@@ -817,11 +826,11 @@ def plot_design(design):
     ax.plot(
         baseline_bram,
         baseline_latency,
-        marker="d",
+        marker="X",
         markersize=20,
         linestyle=None,
-        label="baseline",
-        color="black",
+        label="Baseline-Max",
+        color="orange",
         zorder=100,
     )
 
@@ -829,22 +838,34 @@ def plot_design(design):
         ax.plot(
             baseline_dumb_bram,
             baseline_dumb_latency,
-            marker="d",
+            marker="X",
             markersize=20,
             linestyle=None,
-            label="baseline (dumb)",
-            color="orange",
+            label="Baseline-Min",
+            color="black",
             zorder=15,
         )
 
     ax.set_xlim(0, max_x)
-    ax.set_ylim(0, max_y)
+    ax.set_ylim(None, max_y)
+    # get the current auto y lim
+    min_y_auto = ax.get_ylim()[0]
+    new_min_y = min_y_auto - 0.1 * (max_y)
+    # new_min_y = max(0, new_min_y)
+    ax.set_ylim(new_min_y, max_y)
+
     # set tick at origin
     # ax.set_yticks(np.arange(15000, max_y + 1, 10000))
 
-    ax.set_xlabel("Total FIFO BRAM Usage", labelpad=10)
-    ax.set_ylabel("Latency (Cycles)", labelpad=15)
-    ax.set_title(f'Pareto Frontiers for "{design}"', pad=15)
+    # format y ticks to be in therms of K as in thousands
+    # current y tick labels
+    y_tick_labels = ax.get_yticks()
+    y_tick_labels = [f"{int(x / 1000)}K" for x in y_tick_labels]
+    ax.set_yticklabels(y_tick_labels)
+
+    ax.set_xlabel("Total FIFO BRAM Usage", labelpad=5)
+    ax.set_ylabel("Latency (Cycles)", labelpad=5)
+    ax.set_title(f'Pareto Frontiers for "{design}"', pad=1)
 
     handels = [
         *[
@@ -864,20 +885,30 @@ def plot_design(design):
             Line2D(
                 [0],
                 [0],
-                marker="d",
+                marker="X",
                 color="w",
-                markerfacecolor="black",
-                markersize=10,
-                label="Baseline",
+                markerfacecolor="orange",
+                markersize=14,
+                label="Baseline-Max",
             ),
             Line2D(
                 [0],
                 [0],
-                marker="d",
+                marker="X",
                 color="w",
-                markerfacecolor="orange",
-                markersize=10,
-                label="Baseline (dumb)",
+                markerfacecolor="black",
+                markersize=14,
+                label="Baseline-Min",
+            ),
+            # add a gray star
+            Line2D(
+                [0],
+                [0],
+                marker="*",
+                color="w",
+                markerfacecolor="gray",
+                markersize=25,
+                label="Highlighted Pareto Points",
             ),
         ]
     ]
@@ -885,7 +916,7 @@ def plot_design(design):
         handles=handels,
         # loc="lower center",
         loc="upper right",
-        fontsize=12,
+        fontsize=14,
         facecolor="white",
         edgecolor="black",
         framealpha=1,
@@ -906,7 +937,7 @@ def plot_design(design):
 
 def parallel_fn_plot_design(design):
     fig = plot_design(design)
-    fig.savefig(DIR_FIGURES / f"{design}.png", dpi=300)
+    fig.savefig(DIR_FIGURES / f"{design}.png", dpi=300, pad_inches=0)
     plt.close(fig)
 
 

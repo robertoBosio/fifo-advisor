@@ -66,11 +66,11 @@ optimizer_to_color_map = {
 
 optimizer_to_name_map = {
     "random_search": "Random Search",
-    "group_random_search": "Grouped\nRandom Search",
+    "group_random_search": "Grouped Random Search",
     "heuristic": "Heuristic",
     "init_simulated_annealing": "Seeded Simulated Annealing",
-    "discrete_simulated_annealing": "Discrete\nSim. Annealing",
-    "grouped_discrete_simulated_annealing": "Grouped Discrete\nSim. Annealing",
+    "discrete_simulated_annealing": "Sim. Annealing",
+    "grouped_discrete_simulated_annealing": "Grouped Sim. Annealing",
 }
 
 
@@ -467,5 +467,5 @@ fig.suptitle(
     y=0.92,
 )
 
-fig.tight_layout(h_pad=0.0)
+fig.tight_layout(h_pad=0.5)
 fig.savefig(DIR_FIGURES / "__dumb_baseline.png", dpi=300, transparent=True)
