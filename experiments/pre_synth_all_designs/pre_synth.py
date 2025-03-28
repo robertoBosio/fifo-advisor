@@ -16,7 +16,7 @@ DIR_TEST_CASES = DIR_ROOT / "test_cases_streamhls_large"
 assert DIR_TEST_CASES.exists(), f"Test case dir {DIR_TEST_CASES} does not exist"
 
 
-ENV_FILE: Path = DIR_CURRENT / ".env"
+ENV_FILE: Path = DIR_CURRENT.parent / ".env"
 if ENV_FILE.exists():
     env_vars = dotenv_values(ENV_FILE)
 else:

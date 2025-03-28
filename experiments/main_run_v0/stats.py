@@ -27,6 +27,7 @@ if not DIR_DATA.exists():
 
 
 df_baseline = pd.read_csv(DIR_DATA / "data_baseline.csv")
+df_baseline_dumb = pd.read_csv(DIR_DATA / "data_baseline_dumb.csv")
 df_points = pd.read_csv(DIR_DATA / "data_points.csv")
 df_search_counts = pd.read_csv(DIR_DATA / "data_search_counts.csv")
 
@@ -36,12 +37,16 @@ designs_to_remove = ["ResMLP__opt5", "k7mmtree_balanced__opt5", "gesummv__opt5"]
 
 for design in designs_to_remove:
     df_baseline = df_baseline[df_baseline["design_name"] != design]
+    df_baseline_dumb = df_baseline_dumb[df_baseline_dumb["design_name"] != design]
     df_points = df_points[df_points["design_name"] != design]
     df_search_counts = df_search_counts[df_search_counts["design_name"] != design]
 
 
 # if design_name ends in __opt5 remove the __opt5 suffix
 df_baseline["design_name"] = df_baseline["design_name"].str.replace("__opt5", "")
+df_baseline_dumb["design_name"] = df_baseline_dumb["design_name"].str.replace(
+    "__opt5", ""
+)
 df_points["design_name"] = df_points["design_name"].str.replace("__opt5", "")
 df_search_counts["design_name"] = df_search_counts["design_name"].str.replace(
     "__opt5", ""
@@ -298,9 +303,9 @@ with open(DIR_DATA / "tab_improvement.tex", "w") as f:
     f.write(txt_latex)
 
 optimizers_to_plot = [
-    "heuristic",
     "random_search",
     "discrete_simulated_annealing",
+    "heuristic",
     "group_random_search",
     "grouped_discrete_simulated_annealing",
 ]
@@ -334,11 +339,20 @@ df_improvement_plot = df_improvement_plot[
     df_improvement_plot["optimizer_name"].isin(optimizers_to_plot)
 ]
 
-# print(df_improvement_plot)
+
+# design sored by latency reduction for the grouped discete simaulted annelaing cadse
+designs_sorted = df_improvement_plot[
+    df_improvement_plot["optimizer_name"] == "discrete_simulated_annealing"
+]
+print(designs_sorted)
+designs_sorted = designs_sorted.sort_values(["slowdown"], ascending=False)
+designs_sorted_list = designs_sorted["design_name"].unique().tolist()
+print(designs_sorted_list)
+
 
 font = {"size": 18}
 matplotlib.rc("font", **font)
-fig, axs = plt.subplots(2, 1, figsize=(18, 5))
+fig, axs = plt.subplots(2, 1, figsize=(18, 5.4))
 # chnage baseline font size for whole figure
 
 
@@ -375,7 +389,7 @@ sns.barplot(
     y="relative_bram_usage",
     hue="design_name",
     order=optimizers_to_plot,
-    # hue_order=optimizers_to_plot,
+    hue_order=designs_sorted_list,
     # palette=optimizer_to_color_map.values(),
     ax=ax_bram,
     legend=False,
@@ -388,8 +402,43 @@ ax_bram.set_xlabel(None)
 ax_bram.set_xticklabels(
     [optimizer_to_name_map[x] for x in optimizers_to_plot],
 )
-# rotation=45,
-# ha="right",
+
+optimizers_to_highlight = [
+    "group_random_search",
+    "grouped_discrete_simulated_annealing",
+]
+
+optimizer_to_height = {
+    "group_random_search": 0.5,
+    "grouped_discrete_simulated_annealing": 0.4,
+}
+
+x_tic_locs = ax_bram.get_xticks()
+# get the x tick labels
+for optimizer, loc in zip(optimizers_to_plot, x_tic_locs):
+    if optimizer in optimizers_to_highlight:
+        height = optimizer_to_height[optimizer]
+        ax_bram.text(
+            loc,
+            height,
+            "Best Memory Reduction",
+            ha="center",
+            va="center",
+            color="green",
+            fontsize=16,
+            zorder=10,
+        )
+        ax_bram.text(
+            loc,
+            height + 0.15,
+            "✓",
+            ha="center",
+            va="center",
+            # color=bar.get_facecolor(),
+            fontsize=36,
+            zorder=10,
+            color="green",
+        )
 
 
 for j, container in enumerate(ax_bram.containers):
@@ -431,6 +480,8 @@ legned_handels = [
 ax_bram.legend(
     handles=legned_handels,
     loc="upper right",
+    # shift down a bti
+    # bbox_to_anchor=(1.0, 0.9),
     fontsize=16,
     facecolor="white",
     edgecolor="black",
@@ -444,7 +495,8 @@ ax_bram.set_yticklabels(
     [f"{int(x * 100)}%" if x > 0 else "0%" for x in np.arange(0, 1.2, 0.2)]
 )
 # ax_bram.set_title("Relative FIFO BRAM Usage Compared to Baseline Design")
-ax_bram.set_ylabel("FIFO BRAMs Used\n(Rel. to Baseline)")
+# ax_bram.set_ylabel("BRAM Reduction\n(Baseline-Max)")
+ax_bram.set_ylabel("BRAM Usage\n(Baseline-Max)")
 
 ax_latency.grid(which="both", linestyle="--", linewidth=0.5)
 ax_latency.set_axisbelow(True)
@@ -456,7 +508,7 @@ sns.barplot(
     y="slowdown",
     hue="design_name",
     order=optimizers_to_plot,
-    # hue_order=optimizers_to_plot,
+    hue_order=designs_sorted_list,
     # palette=optimizer_to_color_map.values(),
     ax=ax_latency,
     legend=False,
@@ -468,6 +520,38 @@ ax_latency.set_xticklabels(
 )
 ax_latency.set_xlabel(None)
 
+# get location of x ticks
+opts_to_highlight = [
+    "heuristic",
+    "group_random_search",
+    "grouped_discrete_simulated_annealing",
+]
+x_ticks = ax_latency.get_xticks()
+for optimizer, loc in zip(optimizers_to_plot, x_ticks):
+    if optimizer in opts_to_highlight:
+        # highlight the bar
+        ax_latency.text(
+            loc,
+            1.08,
+            "Minimal Latency Overhead",
+            ha="center",
+            va="bottom",
+            color="green",
+            fontsize=16,
+            zorder=10,
+        )
+        ax_latency.text(
+            loc,
+            1.18,
+            "✓",
+            ha="center",
+            va="bottom",
+            # color=bar.get_facecolor(),
+            fontsize=36,
+            zorder=10,
+            color="green",
+        )
+
 # set ticks between 1 and 3 in 0.5 increments
 ax_latency.set_yticks(np.arange(0.5, 3.5, 0.5))
 ax_latency.set_yticklabels([f"{x:.1f}x" for x in np.arange(0.5, 3.5, 0.5)])
@@ -475,7 +559,7 @@ ax_latency.set_yticklabels([f"{x:.1f}x" for x in np.arange(0.5, 3.5, 0.5)])
 
 
 ax_latency.set_ylim(0.5, None)
-ax_latency.set_ylabel("Slowdown\n(Rel. to Baseline)")
+ax_latency.set_ylabel("Latency Overhead\n(Baseline-Max)")
 
 
 ax_latency.autoscale(False)
@@ -520,10 +604,19 @@ ax_latency.legend(
 # fig.suptitle(
 #     "Relative FIFO BRAM Usage and Latency Slowdown of Optimized Point Compared to Baseline Design"
 # )
-fig.tight_layout(h_pad=0.12)
-fig.savefig(DIR_FIGURES / "__baseline_comparison.png", dpi=300)
 
-# exit()
+fig.suptitle(
+    "(a) Relative to Baseline-Max",
+    #  make bold
+    weight="bold",
+    # move sup title down
+    y=0.92,
+)
+
+fig.tight_layout(h_pad=0.12)
+fig.savefig(DIR_FIGURES / "__baseline_comparison.png", dpi=300, transparent=True)
+
+exit()
 
 ################################################
 
@@ -585,6 +678,7 @@ ax.set_yticklabels([f"{x:.1f}x" for x in np.arange(0, 6, 0.5)])
 ax.set_ylim(0, 5.5)
 ax.set_ylabel("Pareto Frontier Hypervolume\n(Rel. to Random Search)", labelpad=15)
 
+
 fig.tight_layout()
 fig.savefig(DIR_FIGURES / "__hypervolume.png", dpi=300)
 
@@ -645,6 +739,14 @@ def plot_design(design):
     baseline_bram = baseline_data_case["bram"].values[0].item()
     baseline_latency = baseline_data_case["latency"].values[0].item()
 
+    baseline_dumb_data_case = df_baseline_dumb[
+        (df_baseline_dumb["design_name"] == design)
+    ].copy()
+    assert len(baseline_dumb_data_case) == 1
+    baseline_dumb_bram = baseline_dumb_data_case["bram"].values[0].item()
+    baseline_dumb_latency = baseline_dumb_data_case["latency"].values[0].item()
+    baseline_dumb_deadlock = baseline_dumb_data_case["deadlock"].values[0].item()
+
     df_points_for_this_design = df_points[df_points["design_name"] == design].copy()
 
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -673,6 +775,7 @@ def plot_design(design):
             markersize=10,
             label=optimizer,
             color=optimizer_to_color_map[optimizer],
+            zorder=10,
         )
 
         # plot the best product point
@@ -689,6 +792,7 @@ def plot_design(design):
             linewidth=12,
             linestyle=None,
             color=optimizer_to_color_map[optimizer],
+            zorder=20,
         )
 
         max_y = df_points_for_this_design["latency"].max() * 1.1
@@ -707,6 +811,7 @@ def plot_design(design):
             alpha=0.08,
             color=optimizer_to_color_map[optimizer],
             # label=f"{optimizer} HV: {vol:.2f}",
+            zorder=0,
         )
 
     ax.plot(
@@ -717,12 +822,25 @@ def plot_design(design):
         linestyle=None,
         label="baseline",
         color="black",
+        zorder=100,
     )
 
+    if not baseline_dumb_deadlock:
+        ax.plot(
+            baseline_dumb_bram,
+            baseline_dumb_latency,
+            marker="d",
+            markersize=20,
+            linestyle=None,
+            label="baseline (dumb)",
+            color="orange",
+            zorder=15,
+        )
+
     ax.set_xlim(0, max_x)
-    ax.set_ylim(15000, max_y)
+    ax.set_ylim(0, max_y)
     # set tick at origin
-    ax.set_yticks(np.arange(15000, max_y + 1, 10000))
+    # ax.set_yticks(np.arange(15000, max_y + 1, 10000))
 
     ax.set_xlabel("Total FIFO BRAM Usage", labelpad=10)
     ax.set_ylabel("Latency (Cycles)", labelpad=15)
@@ -752,13 +870,22 @@ def plot_design(design):
                 markersize=10,
                 label="Baseline",
             ),
+            Line2D(
+                [0],
+                [0],
+                marker="d",
+                color="w",
+                markerfacecolor="orange",
+                markersize=10,
+                label="Baseline (dumb)",
+            ),
         ]
     ]
     ax.legend(
         handles=handels,
         # loc="lower center",
         loc="upper right",
-        fontsize=16,
+        fontsize=12,
         facecolor="white",
         edgecolor="black",
         framealpha=1,

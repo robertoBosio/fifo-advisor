@@ -1,19 +1,17 @@
 from pathlib import Path
 
-
 from fifo_opt.automation import TestCase
 
 DIR_CURRENT = Path(__file__).parent
 DIR_ROOT = DIR_CURRENT.parent.parent
 # DIR_TEST_CASES = DIR_ROOT / "test_cases"
-# DIR_TEST_CASES = DIR_ROOT / "test_cases_inr"
+DIR_TEST_CASES = DIR_ROOT / "test_cases_inr"
 # DIR_TEST_CASES = DIR_ROOT / "test_cases_soda"
 # DIR_TEST_CASES = DIR_ROOT / "test_cases_autosa"
-DIR_TEST_CASES = DIR_ROOT / "test_cases_streamhls_large"
-# k15mmseq__opt5
+# DIR_TEST_CASES = DIR_ROOT / "test_cases_streamhls_large"
 
 
-design_to_test = "k15mmseq__opt5"
+design_to_test = "inr_0"
 
 test_case_dir = DIR_TEST_CASES / design_to_test
 assert test_case_dir.exists(), f"Test case dir {test_case_dir} does not exist"

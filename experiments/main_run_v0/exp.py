@@ -28,7 +28,7 @@ DIR_DATA = DIR_CURRENT / "data"
 if not DIR_DATA.exists():
     DIR_DATA.mkdir(exist_ok=True)
 
-ENV_FILE: Path = DIR_CURRENT / ".env"
+ENV_FILE: Path = DIR_CURRENT.parent / ".env"
 if ENV_FILE.exists():
     env_vars = dotenv_values(ENV_FILE)
 else:
@@ -47,8 +47,9 @@ else:
     )
 
 
-designs_all_dirs = sorted([d for d in DIR_PRE_SYNTH.glob("*") if d.is_dir()])
-
+designs_all_dirs: list[Path] = sorted(
+    [d for d in DIR_PRE_SYNTH.glob("*") if d.is_dir()]
+)
 
 designs_all = [
     TestCase.from_dir(design_dir, design_dir.name.split("__")[0])
@@ -106,6 +107,50 @@ for design in designs_all_filtered:
 
 df_baseline = pd.DataFrame(data_baseline)
 df_baseline.to_csv(DIR_DATA / "data_baseline.csv", index=False)
+
+
+def run_baseline_dumb_eval(design: TestCase):
+    prj_path = design.prj_path.resolve().absolute()
+
+    sim_env = LSEnv(
+        design.solution_dir,
+        env_vars_extra={
+            "PRJ_PATH": str(prj_path),
+        },
+    )
+
+    dumb_config = {}
+    for fifo in sim_env.fifos:
+        fifo_id = fifo.id
+        assert isinstance(fifo_id, int)
+        dumb_config[fifo_id] = 2
+
+    eval_result = sim_env.eval_solution_single(dumb_config)
+
+    print(f"Running design: {design.dir}")
+    print(f"Deadlock: {eval_result.deadlock}")
+    print(f"Latency: {eval_result.latency}")
+    print(f"BRAM usage: {eval_result.bram_usage_total}")
+
+    data = {
+        "design_name": design.dir.name,
+        "deadlock": eval_result.deadlock,
+        "latency": eval_result.latency,
+        "bram": eval_result.bram_usage_total,
+    }
+
+    return data
+
+
+data_all_baseline_dumb = []
+for design in designs_all_filtered:
+    d = run_baseline_dumb_eval(design)
+    data_all_baseline_dumb.append(d)
+
+df_baseline_dumb = pd.DataFrame(data_all_baseline_dumb)
+df_baseline_dumb.to_csv(DIR_DATA / "data_baseline_dumb.csv", index=False)
+
+exit()
 
 
 optimizers: dict[str, partial[T_FIFOOptimizer]] = {

@@ -198,7 +198,7 @@ class TestCase:
             print(p.stderr)
             p.check_returncode()
 
-    def run_synth(self):
+    def run_synth(self, replace_part: str | None = None):
         args = self.build_partial_args()
         args.append("syn")
         env = self.build_env()
