@@ -4,10 +4,10 @@ latency,bram,latency_bram_product,design_name
 65998,2176,143611648,FeedForward__opt5
 39782,2012,80041384,ResMLP__opt5
 2092532,424,887233568,ResidualBlock__opt5
-2181,650,1417650,atax__opt5
-1112,50,55600,bicg__opt5
+2180,620,1351600,atax__opt5
+1112,20,22240,bicg__opt5
 24051,176,4232976,gemm__opt5
-675,60,40500,gesummv__opt5
+673,0,0,gesummv__opt5
 61052,376,22955552,k15mmseq__opt5
 7802,118,920636,k15mmseq_imbalanced__opt5
 28838,464,13380832,k15mmseq_relu__opt5
@@ -22,4 +22,4 @@ latency,bram,latency_bram_product,design_name
 10036,216,2167776,k7mmseq_unbalanced__opt5
 8262,224,1850688,k7mmtree_balanced__opt5
 8750,256,2240000,k7mmtree_unbalanced__opt5
-668,576,384768,mvt__opt5
+667,512,341504,mvt__opt5

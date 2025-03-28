@@ -89,14 +89,10 @@ class LSEnv:
 
     def eval_solution_single(self, x: dict[int, int]) -> EvalResult:
         base_params = self.trace_base.params
-        fifo_widths: dict[int, int] = {
-            fifo.id: fifo.width for fifo in self.trace_base.fifos
-        }
+
         design_points = [x]
 
-        dse_results = self.trace_base.compiled.dse(
-            base_params, fifo_widths, design_points
-        )
+        dse_results = self.trace_base.compiled.dse(base_params, design_points)
         assert len(dse_results) == 1
         dse_result = dse_results[0]
 
@@ -120,20 +116,10 @@ class LSEnv:
     def eval_solution_parallel(
         self, x_multiple: list[dict[int, int]]
     ) -> list[EvalResult]:
-        # results = []
-        # for x in x_multiple:
-        #     result = self.eval_solution_single(x)
-        #     results.append(result)
-
         base_params = self.trace_base.params
-        fifo_widths: dict[int, int] = {
-            fifo.id: fifo.width for fifo in self.trace_base.fifos
-        }
 
         design_points = x_multiple
-        dse_results = self.trace_base.compiled.dse(
-            base_params, fifo_widths, design_points
-        )
+        dse_results = self.trace_base.compiled.dse(base_params, design_points)
 
         results = []
         for dse_result, design_point in zip(dse_results, design_points):
@@ -168,9 +154,6 @@ class LSEnv:
                     f"FIFO size for FIFO {fifo_id} is None. Please set a valid FIFO size."
                 )
         return self.eval_solution_single(fifo_sizes_base_not_none)
-
-    # @abstractmethod
-    # def solve(self) -> list[EvalResult]: ...
 
 
 class FIFOOptimizer(ABC):
