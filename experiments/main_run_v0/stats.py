@@ -350,7 +350,31 @@ designs_sorted_list = designs_sorted["design_name"].unique().tolist()
 print(designs_sorted_list)
 
 
-font = {"size": 18}
+def geomean(x):
+    return np.exp(np.log(x).mean())
+
+
+avg_bram_reduction_by_design = df_improvement_plot.groupby("optimizer_name")[
+    "relative_bram_usage"
+].mean()
+avg_latency_reduction_by_design = df_improvement_plot.groupby("optimizer_name")[
+    "slowdown"
+].agg(geomean)
+
+report_txt = ""
+report_txt += "=== Baseline-Max ===\n"
+report_txt += "Average BRAM Reduction by Optimizer (ABS):\n"
+for optimizer, val in avg_bram_reduction_by_design.items():
+    report_txt += f"{optimizer}: {val:.2f}\n"
+report_txt += "\n"
+report_txt += "Average Relative Latency by Optimizer (GEO):\n"
+for optimizer, val in avg_latency_reduction_by_design.items():
+    report_txt += f"{optimizer}: {val:.2f}\n"
+
+(DIR_DATA / "__report_baseline_max.txt").write_text(report_txt)
+
+
+font = {"size": 17}
 matplotlib.rc("font", **font)
 fig, axs = plt.subplots(2, 1, figsize=(18, 5.4))
 # chnage baseline font size for whole figure
@@ -371,16 +395,6 @@ ax_latency: Axes = axs[1]
 # first axs is for the bram reduction
 ax_bram.grid(which="both", linestyle="--", linewidth=0.5)
 ax_bram.set_axisbelow(True)
-
-# sns.barplot(
-#     data=df_improvement_plot,
-#     x="design_name",
-#     y="relative_bram_usage",
-#     hue="optimizer_name",
-#     hue_order=optimizers_to_plot,
-#     palette=optimizer_to_color_map.values(),
-#     ax=ax_bram,
-# )
 
 
 sns.barplot(
@@ -559,7 +573,7 @@ ax_latency.set_yticklabels([f"{x:.1f}x" for x in np.arange(0.5, 3.5, 0.5)])
 
 
 ax_latency.set_ylim(0.5, None)
-ax_latency.set_ylabel("Latency Overhead\n(Baseline-Max)")
+ax_latency.set_ylabel("Relative Latency\n(Baseline-Max)")
 
 
 ax_latency.autoscale(False)

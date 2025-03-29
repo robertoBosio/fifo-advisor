@@ -1,0 +1,14 @@
+=== Baseline-Max ===
+Average BRAM Reduction by Optimizer (ABS):
+discrete_simulated_annealing: 0.21
+group_random_search: 0.08
+grouped_discrete_simulated_annealing: 0.02
+heuristic: 0.14
+random_search: 0.29
+
+Average Relative Latency by Optimizer (GEO):
+discrete_simulated_annealing: 1.23
+group_random_search: 1.00
+grouped_discrete_simulated_annealing: 1.00
+heuristic: 1.00
+random_search: 1.40

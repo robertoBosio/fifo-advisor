@@ -3,6 +3,7 @@ from pathlib import Path
 from pprint import pp
 
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -177,7 +178,33 @@ df_dumb_improvement = df_dumb_improvement[
 df_dumb_improvement.to_csv(DIR_DATA / "data_dumb_improvement.csv", index=False)
 
 
-font = {"size": 16}
+def geomean(x):
+    return np.exp(np.log(x).mean())
+
+
+avg_bram_increase_by_design = df_dumb_improvement.groupby("optimizer_name")[
+    "bram_increase"
+].mean()
+avg_latency_reduction_by_design = (
+    df_dumb_improvement[df_dumb_improvement["deadlock"] == False]
+    .groupby("optimizer_name")["latency_reduction"]
+    .agg(geomean)
+)
+
+report_txt = ""
+report_txt += "=== Baseline-Min ===\n"
+report_txt += "Average BRAM Increase by Optimizer (ABS):\n"
+for optimizer, val in avg_bram_increase_by_design.items():
+    report_txt += f"{optimizer}: {val:.2f}\n"
+report_txt += "\n"
+report_txt += "Average Relative Latency by Optimizer (GEO):\n"
+for optimizer, val in avg_latency_reduction_by_design.items():
+    report_txt += f"{optimizer}: {val:.2f}\n"
+
+(DIR_DATA / "__report_baseline_min.txt").write_text(report_txt)
+
+
+font = {"size": 17}
 matplotlib.rc("font", **font)
 fig, axs = plt.subplots(2, 1, figsize=(18, 5))
 # chnage baseline font size for whole figure
@@ -416,7 +443,7 @@ y_ticks = [0, 0.5, 1.0, 1.5]
 ax_latency.set_yticks(y_ticks)
 ax_latency.set_yticklabels([f"{val:.1f}x" for val in y_ticks])
 
-ax_latency.set_ylabel("Latency Reduction\n(Baseline-Min)")
+ax_latency.set_ylabel("Relative Latency\n(Baseline-Min)")
 
 
 ax_latency.set_xlabel(None)
