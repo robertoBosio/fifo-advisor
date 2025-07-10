@@ -1,9 +1,10 @@
 import enum
 import itertools
 import random
+import time
 from collections import defaultdict
 from copy import deepcopy
-from typing import Union
+from typing import TypeAlias, Union
 
 import numpy as np
 from lightningsim.trace_file import ResolvedStream
@@ -59,6 +60,40 @@ def compute_dual_obj_scaling_factors(N_points: int) -> np.ndarray:
     return np.vstack((first_row, second_row)).T
 
 
+def count_configs(sim_env) -> int:
+    fifos_dse_space = {}
+    for fifo in sim_env.fifos:
+        fifo_id = fifo.id
+        fifo_depths = sim_env.trace_base.compiled.get_fifo_design_space(
+            [fifo_id], fifo.width
+        )
+        fifos_dse_space[fifo_id] = fifo_depths
+
+    design_space_size = 1
+    for fifo_id, fifo_depths in fifos_dse_space.items():
+        design_space_size *= len(fifo_depths)
+    return design_space_size
+
+
+def count_configs_grouped(sim_env) -> int:
+    fifo_groups = defaultdict(list)
+    for fifo in sim_env.fifos:
+        fifo_groups[fifo.get_display_name()].append(fifo)
+
+    fifo_groups_depths = {}
+    for fifo_group, fifos in fifo_groups.items():
+        fifo_groups_depths[fifo_group] = (
+            sim_env.trace_base.compiled.get_fifo_design_space(
+                [fifo.id for fifo in fifos], fifos[0].width
+            )
+        )
+
+    design_space_size = 1
+    for fifo_id, fifo_depths in fifo_groups_depths.items():
+        design_space_size *= len(fifo_depths)
+    return design_space_size
+
+
 class RandomSearchOptimizer(FIFOOptimizer):
     def __init__(self, sim_env: LSEnv, n_samples: int = 100, seed: int = 7):
         super().__init__(sim_env)
@@ -75,7 +110,7 @@ class RandomSearchOptimizer(FIFOOptimizer):
                 [fifo_id], fifo.width
             )
             fifos_dse_space[fifo_id] = fifo_depths
-        print(fifos_dse_space)
+        # print(fifos_dse_space)
 
         sampled_configs = []
         for _ in range(self.n_samples):
@@ -84,10 +119,6 @@ class RandomSearchOptimizer(FIFOOptimizer):
                 sample[fifo_id] = self.r.choice(fifo_depths)
             sampled_configs.append(sample)
 
-        # results = []
-        # for sample_config in sampled_configs:
-        #     result = self.eval_solution_single(sample_config)
-        #     results.append(result)
         results: list[EvalResult] = self.sim_env.eval_solution_parallel(sampled_configs)
 
         return results
@@ -106,6 +137,7 @@ class GroupRandomSearchOptimizer(FIFOOptimizer):
         self.seed = seed
         self.r = random.Random(seed)
 
+    # def solve(self) -> list[EvalResult]:
     def solve(self) -> list[EvalResult]:
         fifo_groups = defaultdict(list)
         for fifo in self.sim_env.fifos:
@@ -124,9 +156,9 @@ class GroupRandomSearchOptimizer(FIFOOptimizer):
             design_space_size *= len(fifo_depths)
         # print("NAME: ", self.sim_env.vitis_hls_solution_dir.parent.name)
         # print("SIZE: ", design_space_size)
-        print(
-            f"NAME: {self.sim_env.vitis_hls_solution_dir.parent.name}, SIZE: {design_space_size}"
-        )
+        # print(
+        #     f"NAME: {self.sim_env.vitis_hls_solution_dir.parent.name}, SIZE: {design_space_size}"
+        # )
 
         sampled_configs = []
         for _ in range(self.n_samples):
@@ -138,6 +170,7 @@ class GroupRandomSearchOptimizer(FIFOOptimizer):
             sampled_configs.append(sample)
 
         results = self.sim_env.eval_solution_parallel(sampled_configs)
+
         return results
 
 
@@ -191,6 +224,7 @@ class GroupExhaustiveOptimizer(FIFOOptimizer):
         )
 
         results = self.sim_env.eval_solution_parallel(samples)
+
         return results
 
 
@@ -414,6 +448,7 @@ class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
         self,
         sim_env: LSEnv,
         maxfun: int = 100,
+        n_scaling_factors: int = 8,
         round_type: ROUND_TYPE = ROUND_TYPE.RINT,
     ):
         super().__init__(sim_env)
@@ -421,7 +456,7 @@ class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
         self.round_type = round_type
 
         self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
-        self.n_scaling_factors = 8
+        self.n_scaling_factors = n_scaling_factors
         self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
             self.n_scaling_factors
         )
@@ -497,6 +532,7 @@ class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
         self,
         sim_env: LSEnv,
         maxfun: int = 100,
+        n_scaling_factors: int = 8,
         round_type: ROUND_TYPE = ROUND_TYPE.RINT,
     ):
         super().__init__(sim_env)
@@ -504,7 +540,7 @@ class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
         self.round_type = round_type
 
         self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
-        self.n_scaling_factors = 8
+        self.n_scaling_factors = n_scaling_factors
         self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
             self.n_scaling_factors
         )
@@ -546,7 +582,7 @@ class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
             bounds = (0, len(self.grouped_fifos_dse_space[fifo_group]) - 1)
             self.fifo_group_bounds.append(bounds)
 
-        print(self.fifo_group_bounds)
+        # print(self.fifo_group_bounds)
 
     def solve(self) -> list[EvalResult]:
         results = []

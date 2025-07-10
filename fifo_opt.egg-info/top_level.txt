@@ -1,3 +1,0 @@
-experiments
-fifo_opt
-test_cases

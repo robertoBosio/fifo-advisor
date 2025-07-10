@@ -165,10 +165,10 @@ optimizers: dict[str, partial[T_FIFOOptimizer]] = {
     "heuristic": partial(
         HeuristicOptimizer,
     ),
-    "init_simulated_annealing": partial(
-        GroupRandomInitializedSimulatedAnnealingOptimizer,
-        n_samples=1000,
-    ),
+    # "init_simulated_annealing": partial(
+    #     GroupRandomInitializedSimulatedAnnealingOptimizer,
+    #     n_samples=1000,
+    # ),
     "discrete_simulated_annealing": partial(
         DiscreteSimulatedAnnealingOptimizer,
         maxfun=1000,

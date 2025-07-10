@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 from typing import TypeVar
 
@@ -212,15 +213,22 @@ class TestCase:
 
     def run_cosim(self):
         args = self.build_partial_args()
-        args.append("toCosim")
+        args.append("cosim")
         env = self.build_env()
+        t0 = time.monotonic()
         p = subprocess.run(
             args, capture_output=True, text=True, bufsize=-1, cwd=self.dir, env=env
         )
+        t1 = time.monotonic()
         if p.returncode != 0:
             print(p.stdout)
             print(p.stderr)
             p.check_returncode()
+
+        dt = t1 - t0
+        cosim_time_fp = self.dir / "cosim_time.txt"
+        cosim_time_fp.write_text(f"{dt:.2f}\n")
+        print(f"Co-simulation for {self.name} in {self.dir} took {dt:.2f} seconds")
 
     @property
     def has_solution_dir(self):
@@ -248,5 +256,6 @@ class TestCase:
         solution_dir_path = hls_dir / "solution1"
         return solution_dir_path
 
-    def run_lightning_sim(self):
+    @property
+    def cosim_dir(self) -> Path:
         raise NotImplementedError

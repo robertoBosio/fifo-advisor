@@ -68,7 +68,7 @@ optimizer_to_color_map = {
 optimizer_to_name_map = {
     "random_search": "Random Search",
     "group_random_search": "Grouped Random Search",
-    "heuristic": "Heuristic",
+    "heuristic": "Greedy Search",
     "init_simulated_annealing": "Seeded Simulated Annealing",
     "discrete_simulated_annealing": "Sim. Annealing",
     "grouped_discrete_simulated_annealing": "Grouped Sim. Annealing",
@@ -195,11 +195,11 @@ report_txt = ""
 report_txt += "=== Baseline-Min ===\n"
 report_txt += "Average BRAM Increase by Optimizer (ABS):\n"
 for optimizer, val in avg_bram_increase_by_design.items():
-    report_txt += f"{optimizer}: {val:.2f}\n"
+    report_txt += f"{optimizer}: {val:.5f}\n"
 report_txt += "\n"
 report_txt += "Average Relative Latency by Optimizer (GEO):\n"
 for optimizer, val in avg_latency_reduction_by_design.items():
-    report_txt += f"{optimizer}: {val:.2f}\n"
+    report_txt += f"{optimizer}: {val:.5f}\n"
 
 (DIR_DATA / "__report_baseline_min.txt").write_text(report_txt)
 

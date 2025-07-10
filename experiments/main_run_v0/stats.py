@@ -70,7 +70,7 @@ optimizer_to_color_map = {
 optimizer_to_name_map = {
     "random_search": "Random Search",
     "group_random_search": "Grouped Random Search",
-    "heuristic": "Heuristic",
+    "heuristic": "Greedy Search",
     "init_simulated_annealing": "Seeded Simulated Annealing",
     "discrete_simulated_annealing": "Sim. Annealing",
     "grouped_discrete_simulated_annealing": "Grouped Sim. Annealing",
@@ -365,11 +365,11 @@ report_txt = ""
 report_txt += "=== Baseline-Max ===\n"
 report_txt += "Average BRAM Reduction by Optimizer (ABS):\n"
 for optimizer, val in avg_bram_reduction_by_design.items():
-    report_txt += f"{optimizer}: {val:.2f}\n"
+    report_txt += f"{optimizer}: {val:.8f}\n"
 report_txt += "\n"
 report_txt += "Average Relative Latency by Optimizer (GEO):\n"
 for optimizer, val in avg_latency_reduction_by_design.items():
-    report_txt += f"{optimizer}: {val:.2f}\n"
+    report_txt += f"{optimizer}: {val:.8f}\n"
 
 (DIR_DATA / "__report_baseline_max.txt").write_text(report_txt)
 
@@ -858,6 +858,29 @@ def plot_design(design):
             label="Baseline-Min",
             color="black",
             zorder=15,
+        )
+
+    if baseline_dumb_deadlock:
+        # x_lim = ax.get_xlim()
+        # x_middle = (x_lim[0] + x_lim[1]) / 2
+        # y_lim = ax.get_ylim()
+        # y_middle = (y_lim[0] + y_lim[1]) / 2
+        ax.text(
+            # place in center relactive to axes
+            0.5,
+            0.05,
+            "*Baseline-Min not shown due to deadlock",
+            transform=ax.transAxes,
+            ha="center",
+            va="center",
+            fontsize=14,
+            # make box around text
+            bbox=dict(
+                boxstyle="round,pad=0.3",
+                edgecolor="black",
+                facecolor="white",
+                alpha=0.9,
+            ),
         )
 
     ax.set_xlim(0, max_x)

@@ -1,6 +1,7 @@
 import asyncio
 import os
 import pickle
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
@@ -8,6 +9,7 @@ from pathlib import Path
 import numpy as np
 from lightningsim.model import Solution
 from lightningsim.runner import Runner, RunnerStep
+from lightningsim.trace_file import ResolvedTrace
 
 
 @dataclass
@@ -18,6 +20,8 @@ class EvalResult:
     latency: float | None
     bram_usage_total: int | None
     # bram_usage_per_fifo: dict[int, int] | None
+
+    timestamp: float | None = None
 
 
 class LSEnv:
@@ -71,7 +75,7 @@ class LSEnv:
                 lambda _: print("Resolving dynamic schedule from trace...")
             )
 
-            self.trace_base = asyncio.run(runner.run())
+            self.trace_base: ResolvedTrace = asyncio.run(runner.run())
             with open(os.path.join(vitis_hls_solution_dir, "trace.pkl"), "wb") as f:
                 pickle.dump(self.trace_base, f)
                 print("Saved trace to pickle file.")
@@ -93,6 +97,7 @@ class LSEnv:
         design_points = [x]
 
         dse_results = self.trace_base.compiled.dse(base_params, design_points)
+        t = time.perf_counter()
         assert len(dse_results) == 1
         dse_result = dse_results[0]
 
@@ -111,6 +116,7 @@ class LSEnv:
             deadlock=deadlock,
             latency=latency,
             bram_usage_total=bram_usage_total,
+            timestamp=t,
         )
 
     def eval_solution_parallel(
@@ -120,6 +126,7 @@ class LSEnv:
 
         design_points = x_multiple
         dse_results = self.trace_base.compiled.dse(base_params, design_points)
+        t = time.perf_counter()
 
         results = []
         for dse_result, design_point in zip(dse_results, design_points):
@@ -139,6 +146,7 @@ class LSEnv:
                     deadlock=deadlock,
                     latency=latency,
                     bram_usage_total=bram_usage_total,
+                    timestamp=t,
                 )
             )
 
