@@ -450,10 +450,12 @@ class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
         maxfun: int = 100,
         n_scaling_factors: int = 8,
         round_type: ROUND_TYPE = ROUND_TYPE.RINT,
+        init_with_largest: bool = False,
     ):
         super().__init__(sim_env)
         self.maxfun = maxfun
         self.round_type = round_type
+        self.init_with_largest = init_with_largest
 
         self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
         self.n_scaling_factors = n_scaling_factors
@@ -507,12 +509,22 @@ class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
                 ub=[u for l, u in self.fifos_dse_space_bounds],
             )
 
+            x0 = None
+            if self.init_with_largest:
+                x0 = np.array(
+                    [
+                        len(self.fifos_dse_space[fifo_id]) - 1
+                        for fifo_id in self.fifo_ids
+                    ]
+                )
+
             result = dual_annealing(
                 objective_function,
                 bounds=bounds,
                 maxfun=self.maxfun,
                 no_local_search=True,
                 rng=7,
+                x0=x0,
             )
             x_rounded = round(result.x, self.round_type)
             x_python = x_rounded.tolist()
@@ -534,10 +546,12 @@ class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
         maxfun: int = 100,
         n_scaling_factors: int = 8,
         round_type: ROUND_TYPE = ROUND_TYPE.RINT,
+        init_with_largest: bool = False,
     ):
         super().__init__(sim_env)
         self.maxfun = maxfun
         self.round_type = round_type
+        self.init_with_largest = init_with_largest
 
         self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
         self.n_scaling_factors = n_scaling_factors
@@ -618,12 +632,22 @@ class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
                 ub=[u for l, u in self.fifo_group_bounds],
             )
 
+            x0 = None
+            if self.init_with_largest:
+                x0 = np.array(
+                    [
+                        len(self.grouped_fifos_dse_space[fifo_group]) - 1
+                        for fifo_group in self.fifo_group_names
+                    ]
+                )
+
             result: OptimizeResult = dual_annealing(
                 objective_function,
                 bounds=bounds,
                 maxfun=self.maxfun,
                 no_local_search=True,
                 rng=7,
+                x0=x0,
             )
             x_rounded = round(result.x, self.round_type)
             x_python = x_rounded.tolist()
