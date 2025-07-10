@@ -10,7 +10,7 @@ from fifo_opt.opt_env import LSEnv
 DIR_CURRENT = Path(__file__).parent
 
 
-ENV_FILE: Path = DIR_CURRENT / ".env"
+ENV_FILE: Path = DIR_CURRENT.parent / ".env"
 if ENV_FILE.exists():
     env_vars = dotenv_values(ENV_FILE)
 else:

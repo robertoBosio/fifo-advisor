@@ -4,11 +4,7 @@ const int ARRAY_SIZE = 10000;
 
 void forward(int input[ARRAY_SIZE], int output[ARRAY_SIZE], int num_elements,
              int aggregate_threshold) {
-#pragma HLS INTERFACE ap_memory port = input
-#pragma HLS INTERFACE ap_memory port = output
-#pragma HLS INTERFACE s_axilite port = num_elements
-#pragma HLS INTERFACE s_axilite port = aggregate_threshold
-#pragma HLS INTERFACE s_axilite port = return
+#pragma HLS DATAFLOW
 
   // 96 FIFOs: 16 scatter, 64 process, 16 gather
   hls::stream<int> scatter_fifos[16];
@@ -65,6 +61,8 @@ void forward(int input[ARRAY_SIZE], int output[ARRAY_SIZE], int num_elements,
     }
   }
 }
+
+#include <cstdlib>
 
 // Testbench
 int main() {

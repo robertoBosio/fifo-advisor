@@ -4,11 +4,8 @@ const int ARRAY_SIZE = 10000;
 
 void forward(int input[ARRAY_SIZE], int output[ARRAY_SIZE], int num_elements,
              int threshold) {
-#pragma HLS INTERFACE ap_memory port = input
-#pragma HLS INTERFACE ap_memory port = output
-#pragma HLS INTERFACE s_axilite port = num_elements
-#pragma HLS INTERFACE s_axilite port = threshold
-#pragma HLS INTERFACE s_axilite port = return
+
+#pragma HLS DATAFLOW
 
   // 100 FIFOs: 20 splitters, 40 workers, 40 collectors
   hls::stream<int> split_fifos[20];
@@ -26,46 +23,55 @@ void forward(int input[ARRAY_SIZE], int output[ARRAY_SIZE], int num_elements,
   }
 
   // Process stage with data-dependent fanout
-  for (int iter = 0; iter < num_elements; iter++) {
-    for (int s = 0; s < 20; s++) {
-      if (!split_fifos[s].empty()) {
-        int val = split_fifos[s].read();
+  // Pre-calculate routing counts to avoid using .empty()
+  int splitter_counts[20] = {0};
+  for (int i = 0; i < num_elements; i++) {
+    int route = input[i] % 20;
+    splitter_counts[route]++;
+  }
 
-        if (val > threshold) {
-          // High values fan out to multiple workers
-          work_fifos[s * 2].write(val);
-          work_fifos[s * 2 + 1].write(val / 2);
-          // This creates more data than input!
-        } else {
-          // Low values go to single worker
-          work_fifos[s * 2].write(val);
-        }
+  int worker_counts[40] = {0};
+  for (int s = 0; s < 20; s++) {
+    // Process exact number of items in this splitter FIFO
+    for (int i = 0; i < splitter_counts[s]; i++) {
+      int val = split_fifos[s].read();
+
+      if (val > threshold) {
+        // High values fan out to multiple workers
+        work_fifos[s * 2].write(val);
+        work_fifos[s * 2 + 1].write(val / 2);
+        worker_counts[s * 2]++;
+        worker_counts[s * 2 + 1]++;
+      } else {
+        // Low values go to single worker
+        work_fifos[s * 2].write(val);
+        worker_counts[s * 2]++;
       }
     }
   }
 
   // Work stage
-  for (int iter = 0; iter < num_elements * 2; iter++) {
-    for (int w = 0; w < 40; w++) {
-      if (!work_fifos[w].empty()) {
-        int val = work_fifos[w].read();
-        // Simple computation
-        val = (val * 3) / 2;
-        collect_fifos[w].write(val);
-      }
+  for (int w = 0; w < 40; w++) {
+    // Process exact number of items in this worker FIFO
+    for (int i = 0; i < worker_counts[w]; i++) {
+      int val = work_fifos[w].read();
+      // Simple computation
+      val = (val * 3) / 2;
+      collect_fifos[w].write(val);
     }
   }
 
   // Join stage - collect results
   int out_idx = 0;
-  for (int iter = 0; iter < num_elements * 2 && out_idx < ARRAY_SIZE; iter++) {
-    for (int c = 0; c < 40; c++) {
-      if (!collect_fifos[c].empty() && out_idx < ARRAY_SIZE) {
-        output[out_idx++] = collect_fifos[c].read();
-      }
+  for (int c = 0; c < 40; c++) {
+    // Collect exact number of results from this collector FIFO
+    for (int i = 0; i < worker_counts[c] && out_idx < ARRAY_SIZE; i++) {
+      output[out_idx++] = collect_fifos[c].read();
     }
   }
 }
+
+#include <cstdlib>
 
 // Testbench
 int main() {

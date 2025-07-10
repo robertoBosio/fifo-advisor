@@ -12,7 +12,8 @@ DIR_CURRENT = Path(__file__).parent
 DIR_ROOT = DIR_CURRENT.parent.parent
 
 # DIR_TEST_CASES = DIR_ROOT / "test_cases"
-DIR_TEST_CASES = DIR_ROOT / "test_cases_streamhls_large"
+# DIR_TEST_CASES = DIR_ROOT / "test_cases_streamhls_large"
+DIR_TEST_CASES = DIR_ROOT / "test_cases_synthetic"
 assert DIR_TEST_CASES.exists(), f"Test case dir {DIR_TEST_CASES} does not exist"
 
 
