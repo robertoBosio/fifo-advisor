@@ -173,10 +173,12 @@ class TestCase:
     def prj_path(self):
         return self.dir.resolve()
 
-    def build_partial_args(self) -> list[str]:
+    def build_partial_args(self, log_name: str = "vitis_hls.log") -> list[str]:
         vitis_hls_bin = unwrap(auto_find_vitis_hls_bin())
         args = []
         args.append(str(vitis_hls_bin.resolve()))
+        args.append("-l")
+        args.append(log_name)
         args.append("hls.tcl")
         args.append(self.name)
 
@@ -188,7 +190,7 @@ class TestCase:
         return env
 
     def run_csim(self):
-        args = self.build_partial_args()
+        args = self.build_partial_args(log_name="vitis_hls__csim.log")
         args.append("csim")
         env = self.build_env()
         p = subprocess.run(
@@ -200,7 +202,7 @@ class TestCase:
             p.check_returncode()
 
     def run_synth(self, replace_part: str | None = None):
-        args = self.build_partial_args()
+        args = self.build_partial_args(log_name="vitis_hls__syn.log")
         args.append("syn")
         env = self.build_env()
         p = subprocess.run(
@@ -212,7 +214,7 @@ class TestCase:
             p.check_returncode()
 
     def run_cosim(self):
-        args = self.build_partial_args()
+        args = self.build_partial_args(log_name="vitis_hls__cosim.log")
         args.append("cosim")
         env = self.build_env()
         t0 = time.monotonic()

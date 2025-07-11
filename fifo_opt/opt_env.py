@@ -1,6 +1,7 @@
 import asyncio
 import os
 import pickle
+import sys
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -74,6 +75,8 @@ class LSEnv:
             runner.steps[RunnerStep.RESOLVING_TRACE].on_start(
                 lambda _: print("Resolving dynamic schedule from trace...")
             )
+
+            sys.setrecursionlimit(10_000)
 
             self.trace_base: ResolvedTrace = asyncio.run(runner.run())
             with open(os.path.join(vitis_hls_solution_dir, "trace.pkl"), "wb") as f:

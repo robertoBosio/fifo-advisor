@@ -464,11 +464,18 @@ class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
         )
 
         self.fifos_dse_space = {}
+
         for fifo in self.sim_env.fifos:
             fifo_id = fifo.id
-            fifo_depths = self.sim_env.trace_base.compiled.get_fifo_design_space(
-                [fifo_id], fifo.width
-            )
+            try:
+                fifo_depths = self.sim_env.trace_base.compiled.get_fifo_design_space(
+                    [fifo_id], fifo.width
+                )
+                if fifo_depths == [2]:
+                    fifo_depths = [2, 64 * fifo.width]
+                print(f"FIFO {fifo_id} design space: {fifo_depths}")
+            except Exception:
+                fifo_depths = [2, 64 * fifo.width]
             self.fifos_dse_space[fifo_id] = fifo_depths
 
         self.fifos_dse_space_bounds = []

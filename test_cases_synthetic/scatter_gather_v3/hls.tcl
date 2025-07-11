@@ -1,7 +1,7 @@
 open_project hls_project
 set_top forward
 add_files design.cpp
-add_files -tb design.cpp
+add_files -tb design_tb.cpp
 open_solution "solution1" -flow_target vivado
 # set_part xcu200-fsgd2104-2-e
 set_part {xcu280-fsvh2892-2L-e}

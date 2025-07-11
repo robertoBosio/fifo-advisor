@@ -41,10 +41,12 @@ if not DIR_PRE_SYNTH.exists():
 
 designs_to_test: list[str] = sorted([d.name for d in DIR_TEST_CASES.glob("*")])
 designs_to_ignore: list[str] = []
-
 designs_to_test = [
     design for design in designs_to_test if design not in designs_to_ignore
 ]
+
+designs_to_keep = ["scatter_gather_v3"]
+designs_to_test = [design for design in designs_to_test if design in designs_to_keep]
 
 print(designs_to_test)
 

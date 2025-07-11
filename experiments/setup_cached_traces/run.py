@@ -58,7 +58,7 @@ def run_single(design: TestCase) -> None:
     )
 
 
-N_JOBS = 48
+N_JOBS = 1
 
 Parallel(n_jobs=N_JOBS, backend="multiprocessing")(
     delayed(run_single)(design) for design in designs_all
