@@ -592,11 +592,17 @@ class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
 
         self.grouped_fifos_dse_space = {}
         for fifo_group, fifos in self.fifo_groups.items():
-            self.grouped_fifos_dse_space[fifo_group] = (
-                self.sim_env.trace_base.compiled.get_fifo_design_space(
-                    [fifo.id for fifo in fifos], fifos[0].width
-                )
+            # self.grouped_fifos_dse_space[fifo_group] = (
+            #     self.sim_env.trace_base.compiled.get_fifo_design_space(
+            #         [fifo.id for fifo in fifos], fifos[0].width
+            #     )
+            # )
+            ds = self.sim_env.trace_base.compiled.get_fifo_design_space(
+                [fifo.id for fifo in fifos], fifos[0].width
             )
+            if ds == [2]:
+                ds: list[int] = [2, 64 * fifos[0].width]
+            self.grouped_fifos_dse_space[fifo_group] = ds
 
         self.fifo_group_bounds: list[tuple[int, int]] = []
         for fifo_group in self.fifo_group_names:

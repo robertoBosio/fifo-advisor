@@ -1,4 +1,4 @@
-open_project -reset project
+open_project -reset hls_project
 set_top PNA_compute_graphs
 
 add_files src/PNA_compute.cc

@@ -5,34 +5,34 @@
 \toprule
 \multirow{2}{*}{\textbf{Design}} & \textbf{Co-Sim} & \multicolumn{5}{c}{\textbf{FIFO-Advisor}} \\
 \cmidrule{2-7}
- & \textbf{(PAR=32)} & \textbf{SA} & \textbf{Grp. Rnd.} & \textbf{Grp. SA} & \textbf{Heuristic} & \textbf{Rnd} \\
+ & \textbf{(PAR=32)} & \textbf{Heuristic} & \textbf{Rnd.} & \textbf{Grp. Rnd.} & \textbf{SA} & \textbf{Grp. SA} \\
 \midrule
-atax & 0.61 days & 8.62 s. / $1.94\text{e}5$$\times$ & 3.17 s. / $5.28\text{e}5$$\times$ & 11.08 s. / $1.51\text{e}5$$\times$ & 10.68 s. / $1.57\text{e}5$$\times$ & 2.10 s. / $7.99\text{e}5$$\times$ \\
-Autoencoder & 8.68 days & 25.60 s. / $9.38\text{e}5$$\times$ & 3.83 s. / $6.27\text{e}6$$\times$ & 19.66 s. / $1.22\text{e}6$$\times$ & 45.39 s. / $5.29\text{e}5$$\times$ & 3.40 s. / $7.05\text{e}6$$\times$ \\
-bicg & 1.04 days & 0.10 s. / $2.75\text{e}7$$\times$ & 0.28 s. / $1.02\text{e}7$$\times$ & 0.13 s. / $2.13\text{e}7$$\times$ & 0.00 s. / $7.55\text{e}8$$\times$ & 0.10 s. / $2.86\text{e}7$$\times$ \\
-DepthwiseSeparableConvBlock & 2.06 days & 18.48 s. / $3.09\text{e}5$$\times$ & 1.31 s. / $4.36\text{e}6$$\times$ & 14.82 s. / $3.85\text{e}5$$\times$ & 7.33 s. / $7.79\text{e}5$$\times$ & 1.76 s. / $3.24\text{e}6$$\times$ \\
-FeedForward & 16.11 days & 26.01 s. / $1.71\text{e}6$$\times$ & 5.17 s. / $8.62\text{e}6$$\times$ & 25.58 s. / $1.74\text{e}6$$\times$ & 74.20 s. / $6.00\text{e}5$$\times$ & 3.94 s. / $1.13\text{e}7$$\times$ \\
-gemm & 7.05 days & 4.11 s. / $4.74\text{e}6$$\times$ & 0.38 s. / $5.13\text{e}7$$\times$ & 6.47 s. / $3.01\text{e}6$$\times$ & 0.10 s. / $1.88\text{e}8$$\times$ & 0.84 s. / $2.31\text{e}7$$\times$ \\
-gesummv & 0.46 days & 0.15 s. / $8.41\text{e}6$$\times$ & 0.15 s. / $8.55\text{e}6$$\times$ & 0.08 s. / $1.55\text{e}7$$\times$ & 0.00 s. / $4.07\text{e}8$$\times$ & 0.08 s. / $1.57\text{e}7$$\times$ \\
-k15mmseq & 1.82 days & 3.72 s. / $1.36\text{e}6$$\times$ & 0.42 s. / $1.20\text{e}7$$\times$ & 3.46 s. / $1.45\text{e}6$$\times$ & 6.15 s. / $8.20\text{e}5$$\times$ & 0.67 s. / $7.55\text{e}6$$\times$ \\
-k15mmseq\_imbalanced & 0.43 days & 1.52 s. / $7.89\text{e}5$$\times$ & 0.28 s. / $4.29\text{e}6$$\times$ & 1.34 s. / $8.99\text{e}5$$\times$ & 0.55 s. / $2.17\text{e}6$$\times$ & 0.29 s. / $4.09\text{e}6$$\times$ \\
-k15mmseq\_relu & 1.33 days & 10.29 s. / $3.56\text{e}5$$\times$ & 0.82 s. / $4.45\text{e}6$$\times$ & 7.15 s. / $5.13\text{e}5$$\times$ & 11.90 s. / $3.08\text{e}5$$\times$ & 0.78 s. / $4.68\text{e}6$$\times$ \\
-k15mmseq\_relu\_imbalanced & 0.37 days & 3.03 s. / $3.42\text{e}5$$\times$ & 0.38 s. / $2.74\text{e}6$$\times$ & 1.65 s. / $6.27\text{e}5$$\times$ & 1.06 s. / $9.77\text{e}5$$\times$ & 0.39 s. / $2.64\text{e}6$$\times$ \\
-k15mmtree & 1.59 days & 2.32 s. / $1.89\text{e}6$$\times$ & 0.42 s. / $1.03\text{e}7$$\times$ & 3.04 s. / $1.45\text{e}6$$\times$ & 2.35 s. / $1.87\text{e}6$$\times$ & 0.48 s. / $9.13\text{e}6$$\times$ \\
-k15mmtree\_imbalanced & 1.42 days & 2.56 s. / $1.53\text{e}6$$\times$ & 0.49 s. / $7.99\text{e}6$$\times$ & 4.09 s. / $9.61\text{e}5$$\times$ & 1.98 s. / $1.99\text{e}6$$\times$ & 0.41 s. / $9.69\text{e}6$$\times$ \\
-k15mmtree\_relu & 1.36 days & 7.99 s. / $4.70\text{e}5$$\times$ & 0.81 s. / $4.65\text{e}6$$\times$ & 7.54 s. / $4.98\text{e}5$$\times$ & 13.37 s. / $2.81\text{e}5$$\times$ & 1.00 s. / $3.76\text{e}6$$\times$ \\
-k15mmtree\_relu\_imbalanced & 1.33 days & 5.76 s. / $6.36\text{e}5$$\times$ & 1.54 s. / $2.39\text{e}6$$\times$ & 5.70 s. / $6.43\text{e}5$$\times$ & 13.54 s. / $2.71\text{e}5$$\times$ & 0.98 s. / $3.73\text{e}6$$\times$ \\
-k2mm & 8.46 days & 5.44 s. / $4.30\text{e}6$$\times$ & 0.62 s. / $3.75\text{e}7$$\times$ & 7.24 s. / $3.23\text{e}6$$\times$ & 0.88 s. / $2.66\text{e}7$$\times$ & 0.79 s. / $2.94\text{e}7$$\times$ \\
-k3mm & 11.79 days & 7.94 s. / $4.11\text{e}6$$\times$ & 0.78 s. / $4.16\text{e}7$$\times$ & 7.21 s. / $4.52\text{e}6$$\times$ & 5.98 s. / $5.46\text{e}6$$\times$ & 1.01 s. / $3.24\text{e}7$$\times$ \\
-k7mmseq\_balanced & 1.77 days & 1.31 s. / $3.75\text{e}6$$\times$ & 0.36 s. / $1.35\text{e}7$$\times$ & 1.28 s. / $3.83\text{e}6$$\times$ & 1.11 s. / $4.41\text{e}6$$\times$ & 0.60 s. / $8.14\text{e}6$$\times$ \\
-k7mmseq\_unbalanced & 2.59 days & 1.42 s. / $5.05\text{e}6$$\times$ & 0.44 s. / $1.63\text{e}7$$\times$ & 1.45 s. / $4.95\text{e}6$$\times$ & 0.87 s. / $8.21\text{e}6$$\times$ & 0.78 s. / $9.20\text{e}6$$\times$ \\
-k7mmtree\_balanced & 2.00 days & 0.93 s. / $5.97\text{e}6$$\times$ & 0.31 s. / $1.76\text{e}7$$\times$ & 1.18 s. / $4.69\text{e}6$$\times$ & 0.47 s. / $1.19\text{e}7$$\times$ & 0.46 s. / $1.19\text{e}7$$\times$ \\
-k7mmtree\_unbalanced & 2.23 days & 1.41 s. / $4.38\text{e}6$$\times$ & 0.31 s. / $2.00\text{e}7$$\times$ & 1.41 s. / $4.37\text{e}6$$\times$ & 1.32 s. / $4.66\text{e}6$$\times$ & 0.34 s. / $1.79\text{e}7$$\times$ \\
-mvt & 1.66 days & 7.68 s. / $5.98\text{e}5$$\times$ & 0.68 s. / $6.75\text{e}6$$\times$ & 10.81 s. / $4.24\text{e}5$$\times$ & 0.13 s. / $3.42\text{e}7$$\times$ & 1.44 s. / $3.18\text{e}6$$\times$ \\
-ResidualBlock & 9.41 days & 14.00 s. / $1.86\text{e}6$$\times$ & 2.24 s. / $1.16\text{e}7$$\times$ & 14.66 s. / $1.78\text{e}6$$\times$ & 2.06 s. / $1.26\text{e}7$$\times$ & 2.78 s. / $9.35\text{e}6$$\times$ \\
-ResMLP & 4.94 days & 26.22 s. / $5.21\text{e}5$$\times$ & 4.65 s. / $2.94\text{e}6$$\times$ & 45.87 s. / $2.98\text{e}5$$\times$ & 141.41 s. / $9.65\text{e}4$$\times$ & 5.77 s. / $2.36\text{e}6$$\times$ \\
+atax & 0.61 days & 10.68 s. & 2.10 s. & 3.17 s. & 8.62 s. & 11.08 s. \\
+Autoencoder & 8.68 days & 45.39 s. & 3.40 s. & 3.83 s. & 25.60 s. & 19.66 s. \\
+bicg & 1.04 days & 0.00 s. & 0.10 s. & 0.28 s. & 0.10 s. & 0.13 s. \\
+DepthwiseSeparableConvBlock & 2.06 days & 7.33 s. & 1.76 s. & 1.31 s. & 18.48 s. & 14.82 s. \\
+FeedForward & 16.11 days & 74.20 s. & 3.94 s. & 5.17 s. & 26.01 s. & 25.58 s. \\
+gemm & 7.05 days & 0.10 s. & 0.84 s. & 0.38 s. & 4.11 s. & 6.47 s. \\
+gesummv & 0.46 days & 0.00 s. & 0.08 s. & 0.15 s. & 0.15 s. & 0.08 s. \\
+k15mmseq & 1.82 days & 6.15 s. & 0.67 s. & 0.42 s. & 3.72 s. & 3.46 s. \\
+k15mmseq\_imbalanced & 0.43 days & 0.55 s. & 0.29 s. & 0.28 s. & 1.52 s. & 1.34 s. \\
+k15mmseq\_relu & 1.33 days & 11.90 s. & 0.78 s. & 0.82 s. & 10.29 s. & 7.15 s. \\
+k15mmseq\_relu\_imbalanced & 0.37 days & 1.06 s. & 0.39 s. & 0.38 s. & 3.03 s. & 1.65 s. \\
+k15mmtree & 1.59 days & 2.35 s. & 0.48 s. & 0.42 s. & 2.32 s. & 3.04 s. \\
+k15mmtree\_imbalanced & 1.42 days & 1.98 s. & 0.41 s. & 0.49 s. & 2.56 s. & 4.09 s. \\
+k15mmtree\_relu & 1.36 days & 13.37 s. & 1.00 s. & 0.81 s. & 7.99 s. & 7.54 s. \\
+k15mmtree\_relu\_imbalanced & 1.33 days & 13.54 s. & 0.98 s. & 1.54 s. & 5.76 s. & 5.70 s. \\
+k2mm & 8.46 days & 0.88 s. & 0.79 s. & 0.62 s. & 5.44 s. & 7.24 s. \\
+k3mm & 11.79 days & 5.98 s. & 1.01 s. & 0.78 s. & 7.94 s. & 7.21 s. \\
+k7mmseq\_balanced & 1.77 days & 1.11 s. & 0.60 s. & 0.36 s. & 1.31 s. & 1.28 s. \\
+k7mmseq\_unbalanced & 2.59 days & 0.87 s. & 0.78 s. & 0.44 s. & 1.42 s. & 1.45 s. \\
+k7mmtree\_balanced & 2.00 days & 0.47 s. & 0.46 s. & 0.31 s. & 0.93 s. & 1.18 s. \\
+k7mmtree\_unbalanced & 2.23 days & 1.32 s. & 0.34 s. & 0.31 s. & 1.41 s. & 1.41 s. \\
+mvt & 1.66 days & 0.13 s. & 1.44 s. & 0.68 s. & 7.68 s. & 10.81 s. \\
+ResidualBlock & 9.41 days & 2.06 s. & 2.78 s. & 2.24 s. & 14.00 s. & 14.66 s. \\
+ResMLP & 4.94 days & 141.41 s. & 5.77 s. & 4.65 s. & 26.22 s. & 45.87 s. \\
 \midrule
-\textbf{FIFO-Advisor Speedup Geomean} & & \textbf{1581708.79$\times$} & \textbf{8213888.52$\times$} & \textbf{1534989.17$\times$} & \textbf{3353451.10$\times$} & \textbf{7522407.47$\times$} \\
+\textbf{FIFO-Advisor Speedup Geomean} & & $\bm{10^{6.53}\pmb{\times}}$ & $\bm{10^{6.88}\pmb{\times}}$ & $\bm{10^{6.91}\pmb{\times}}$ & $\bm{10^{6.20}\pmb{\times}}$ & $\bm{10^{6.19}\pmb{\times}}$ \\
 \bottomrule
 \end{tabular}
 \caption{Comparison of Co-Simulation and FIFO Optimization runtimes for different designs.}

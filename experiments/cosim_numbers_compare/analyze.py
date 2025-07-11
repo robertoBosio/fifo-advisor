@@ -53,11 +53,11 @@ assert test_cases_cosim == test_cases_fifo_opt, (
 designs = sorted(test_cases_cosim, key=lambda x: x.lower())
 
 optimizers = [
-    "DiscreteSimulatedAnnealingOptimizer",
-    "GroupRandomSearchOptimizer",
-    "GroupedDiscreteSimulatedAnnealingOptimizer",
     "HeuristicOptimizer",
     "RandomSearchOptimizer",
+    "GroupRandomSearchOptimizer",
+    "DiscreteSimulatedAnnealingOptimizer",
+    "GroupedDiscreteSimulatedAnnealingOptimizer",
 ]
 
 MAP_OPTIMIZER_TO_SHORT_NAME = {
@@ -65,7 +65,7 @@ MAP_OPTIMIZER_TO_SHORT_NAME = {
     "GroupRandomSearchOptimizer": "Grp. Rnd.",
     "GroupedDiscreteSimulatedAnnealingOptimizer": "Grp. SA",
     "HeuristicOptimizer": "Heuristic",
-    "RandomSearchOptimizer": "Rnd",
+    "RandomSearchOptimizer": "Rnd.",
 }
 
 
@@ -105,7 +105,9 @@ latex_txt += "\\cmidrule{2-" + str(2 + len(optimizers)) + "}\n"
 # Second level headers
 latex_txt += (
     " & \\textbf{(PAR=32)} & "
-    + " & ".join(f"\\textbf{{{name}}}" for name in MAP_OPTIMIZER_TO_SHORT_NAME.values())
+    + " & ".join(
+        f"\\textbf{{{MAP_OPTIMIZER_TO_SHORT_NAME[key]}}}" for key in optimizers
+    )
     + " \\\\\n"
 )
 latex_txt += "\\midrule\n"
@@ -146,12 +148,17 @@ for design in designs:
         for optimizer, runtime in zip(optimizers, optimizer_runtimes)
     }
 
+    # latex_txt += (
+    #     f"{design_name} & {cosim_runtime_days:.2f} days & "
+    #     + " & ".join(
+    #         f"{runtime:.2f} s. / {format_scientific_notation(cosim_runtime / runtime)}$\\times$"
+    #         for runtime in optimizer_runtimes
+    #     )
+    #     + " \\\\\n"
+    # )
     latex_txt += (
         f"{design_name} & {cosim_runtime_days:.2f} days & "
-        + " & ".join(
-            f"{runtime:.2f} s. / {format_scientific_notation(cosim_runtime / runtime)}$\\times$"
-            for runtime in optimizer_runtimes
-        )
+        + " & ".join(f"{runtime:.2f} s." for runtime in optimizer_runtimes)
         + " \\\\\n"
     )
 
@@ -169,9 +176,16 @@ for optimizer in optimizers:
     geomean = np.exp(np.mean(np.log(vals)))
     geomean_values.append(geomean)
 
+geomean_values_exp = [np.log10(geomean) for geomean in geomean_values]
+
+
+times_symbol = r"\pmb{\times}"
+
 latex_txt += " & ".join(
-    f"\\textbf{{{geomean:.2f}$\\times$}}" for geomean in geomean_values
+    f"$\\bm{{10^{{{geomean_exp:.2f}}}{times_symbol}}}$"
+    for geomean_exp in geomean_values_exp
 )
+
 
 latex_txt += " \\\\\n"
 

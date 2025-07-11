@@ -39,3 +39,14 @@ _sim_env = LSEnv(
         "PRJ_PATH": str(prj_path),
     },
 )
+
+
+# test_case_to_trace = TestCase.from_dir(
+#     Path("/usr/scratch/rsarkar30/fifo-opt/test_cases_synthetic/scatter_gather_v3")
+# )
+# _sim_env = LSEnv(
+#     test_case_to_trace.solution_dir,
+#     # env_vars_extra={
+#     #     "PRJ_PATH": str(prj_path),
+#     # },
+# )

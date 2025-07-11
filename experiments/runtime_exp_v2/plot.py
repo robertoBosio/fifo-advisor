@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -39,8 +40,10 @@ MAP_OPTIMIZER_TO_SHORT_NAME = {
     "RandomSearchOptimizer": "Rnd",
 }
 
+font = {"size": 10}
+matplotlib.rc("font", **font)
 
-fig, ax = plt.subplots(figsize=(6, 4))
+fig, ax = plt.subplots(figsize=(6, 2.8))
 
 
 baseline_latency = data_to_cache_to_disk["baseline"]["latency"]
@@ -107,17 +110,22 @@ ax.set_yticks(yticks)
 xticks = np.arange(0.0, 11.0, 1.0)
 ax.set_xticks(xticks)
 
-ax.legend(ncol=3, loc="upper center", fontsize=10)
+ax.legend(
+    ncol=3,
+    loc="upper center",
+    fontsize=10,
+    labelspacing=0.1,
+)
 
 
 selected_design_name = "k15mmtree"
 ax.set_title(f'Optimizer Iso-Runtime Comparison for "{selected_design_name}"')
 
 
-ax.title.set_fontweight("bold")
+# ax.title.set_fontweight("bold")
 # make axes labels bold
-ax.xaxis.label.set_fontweight("bold")
-ax.yaxis.label.set_fontweight("bold")
+# ax.xaxis.label.set_fontweight("bold")
+# ax.yaxis.label.set_fontweight("bold")
 
 
 plt.tight_layout()
