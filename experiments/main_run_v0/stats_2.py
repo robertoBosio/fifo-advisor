@@ -1,6 +1,5 @@
 import itertools
 from pathlib import Path
-from pprint import pp
 
 import matplotlib
 import numpy as np
@@ -186,7 +185,7 @@ avg_bram_increase_by_design = df_dumb_improvement.groupby("optimizer_name")[
     "bram_increase"
 ].mean()
 avg_latency_reduction_by_design = (
-    df_dumb_improvement[df_dumb_improvement["deadlock"] == False]
+    df_dumb_improvement[df_dumb_improvement["deadlock"] is False]
     .groupby("optimizer_name")["latency_reduction"]
     .agg(geomean)
 )

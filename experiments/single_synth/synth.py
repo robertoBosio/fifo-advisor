@@ -1,19 +1,13 @@
-import shutil
 from pathlib import Path
 
-from fifo_opt.automation import TestCase
-from fifo_opt.opt_env import LSEnv
+from fifo_advisor.automation import TestCase
+from fifo_advisor.opt_env import LSEnv
 
 DIR_CURRENT = Path(__file__).parent
 DIR_ROOT = DIR_CURRENT.parent.parent
-# DIR_TEST_CASES = DIR_ROOT / "test_cases"
-# DIR_TEST_CASES = DIR_ROOT / "test_cases_inr"
-DIR_TEST_CASES = DIR_ROOT / "test_cases_flowgnn"
-# DIR_TEST_CASES = DIR_ROOT / "test_cases_soda"
-# DIR_TEST_CASES = DIR_ROOT / "test_cases_autosa"
+# DIR_TEST_CASES = DIR_ROOT / "test_cases_streamhls"
 # DIR_TEST_CASES = DIR_ROOT / "test_cases_streamhls_large"
-# DIR_TEST_CASES = DIR_ROOT / "test_cases_synthetic"
-
+DIR_TEST_CASES = DIR_ROOT / "test_cases_flowgnn"
 
 design_to_test = "pna"
 
@@ -39,14 +33,3 @@ _sim_env = LSEnv(
         "PRJ_PATH": str(prj_path),
     },
 )
-
-
-# test_case_to_trace = TestCase.from_dir(
-#     Path("/usr/scratch/rsarkar30/fifo-opt/test_cases_synthetic/scatter_gather_v3")
-# )
-# _sim_env = LSEnv(
-#     test_case_to_trace.solution_dir,
-#     # env_vars_extra={
-#     #     "PRJ_PATH": str(prj_path),
-#     # },
-# )

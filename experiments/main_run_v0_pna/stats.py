@@ -1,5 +1,4 @@
 import itertools
-import multiprocessing
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 
@@ -13,7 +12,6 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
-from matplotlib.ticker import LogLocator
 
 DIR_CURRENT = Path(__file__).parent
 

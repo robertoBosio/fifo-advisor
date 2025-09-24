@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -16,22 +15,22 @@ if not DIR_DATA.exists():
 
 
 FP_COSIM = DIR_DATA / "cosim_runtimes.csv"
-FP_FIFO_OPT = DIR_DATA / "fifo_opt_runtimes.csv"
+FP_FIFO_ADVISOR = DIR_DATA / "fifo_advisor_runtimes.csv"
 
 
 assert FP_COSIM.exists(), f"File {FP_COSIM} does not exist."
-assert FP_FIFO_OPT.exists(), f"File {FP_FIFO_OPT} does not exist."
+assert FP_FIFO_ADVISOR.exists(), f"File {FP_FIFO_ADVISOR} does not exist."
 
 
 df_cosim = pd.read_csv(FP_COSIM)
-df_fifo_opt = pd.read_csv(FP_FIFO_OPT)
+df_fifo_advisor = pd.read_csv(FP_FIFO_ADVISOR)
 
 
 print("Cosim DataFrame:")
 print(df_cosim.head())
 
-print("\nFIFO Opt DataFrame:")
-print(df_fifo_opt.head())
+print("\nFIFO Advisor DataFrame:")
+print(df_fifo_advisor.head())
 
 
 # remove __opt5 from test_case in df_cosim
@@ -41,13 +40,13 @@ df_cosim = df_cosim[~df_cosim["test_case"].str.contains("k15mmseq_test")]
 
 # get the set of test cases in both DataFrames
 test_cases_cosim = set(df_cosim["test_case"])
-test_cases_fifo_opt = set(df_fifo_opt["test_case"])
+test_cases_fifo_advisor = set(df_fifo_advisor["test_case"])
 
 print(f"Test cases in cosim: {len(test_cases_cosim)}")
-print(f"Test cases in fifo_opt: {len(test_cases_fifo_opt)}")
+print(f"Test cases in fifo_advisor: {len(test_cases_fifo_advisor)}")
 
-assert test_cases_cosim == test_cases_fifo_opt, (
-    "Test cases in cosim and fifo_opt do not match."
+assert test_cases_cosim == test_cases_fifo_advisor, (
+    "Test cases in cosim and fifo_advisor do not match."
 )
 
 designs = sorted(test_cases_cosim, key=lambda x: x.lower())
@@ -131,12 +130,12 @@ for design in designs:
 
     optimizer_runtimes = []
     for optimizer in optimizers:
-        fifo_opt_runtime_single = df_fifo_opt[
-            (df_fifo_opt["test_case"] == design)
-            & (df_fifo_opt["optimizer"] == optimizer)
+        fifo_advisor_runtime_single = df_fifo_advisor[
+            (df_fifo_advisor["test_case"] == design)
+            & (df_fifo_advisor["optimizer"] == optimizer)
         ]["elapsed_time"].values[0]
-        fifo_opt_runtime = fifo_opt_runtime_single
-        optimizer_runtimes.append(fifo_opt_runtime)
+        fifo_advisor_runtime = fifo_advisor_runtime_single
+        optimizer_runtimes.append(fifo_advisor_runtime)
 
     design_name = design.replace("_", r"\_")  # Escape underscores for LaTeX
 
@@ -194,7 +193,7 @@ latex_txt += "\\bottomrule\n"
 latex_txt += "\\end{tabular}\n"
 
 latex_txt += "\\caption{Comparison of Co-Simulation and FIFO Optimization runtimes for different designs.}\n"
-latex_txt += "\\label{tab:cosim_fifo_opt_comparison}\n"
+latex_txt += "\\label{tab:cosim_fifo_advisor_comparison}\n"
 latex_txt += "\\end{table*}\n"
 
 print(latex_txt)

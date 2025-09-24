@@ -1,19 +1,13 @@
-import itertools
 import json
-import os
 import time
-from concurrent.futures import ThreadPoolExecutor
-from copy import deepcopy
-from functools import partial
 from pathlib import Path
 from pprint import pp
 
 import numpy as np
-import pandas as pd
 from dotenv import dotenv_values
-from fifo_opt.automation import TestCase
-from fifo_opt.opt_env import EvalResult, LSEnv
-from fifo_opt.solvers import (
+from fifo_advisor.automation import TestCase
+from fifo_advisor.opt_env import EvalResult, LSEnv
+from fifo_advisor.solvers import (
     DiscreteSimulatedAnnealingOptimizer,
     GroupedDiscreteSimulatedAnnealingOptimizer,
     GroupRandomSearchOptimizer,

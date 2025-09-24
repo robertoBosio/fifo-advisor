@@ -4,8 +4,8 @@ from pprint import pp
 from dotenv import dotenv_values
 from joblib import Parallel, delayed
 
-from fifo_opt.automation import TestCase
-from fifo_opt.opt_env import LSEnv
+from fifo_advisor.automation import TestCase
+from fifo_advisor.opt_env import LSEnv
 
 DIR_CURRENT = Path(__file__).parent
 

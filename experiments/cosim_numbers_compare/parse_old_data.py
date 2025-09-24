@@ -5,7 +5,7 @@ import pandas as pd
 from dotenv import dotenv_values
 from joblib import Parallel, delayed
 
-from fifo_opt.automation import TestCase
+from fifo_advisor.automation import TestCase
 
 DIR_CURRENT = Path(__file__).parent
 
@@ -20,26 +20,6 @@ else:
     raise FileNotFoundError(
         f"Environment file {ENV_FILE} not found. Please create it with the required variables."
     )
-# if "DIR_PRE_SYNTH" in env_vars:
-#     if env_vars["DIR_PRE_SYNTH"] is None:
-#         raise ValueError(
-#             "Environment variable 'DIR_PRE_SYNTH' is set to None. Please set it to a valid path."
-#         )
-#     DIR_PRE_SYNTH = Path(env_vars["DIR_PRE_SYNTH"])
-# else:
-#     raise KeyError(
-#         "Environment variable 'DIR_PRE_SYNTH' not found in .env file. Please add it."
-#     )
-# if "DIR_COSIM" in env_vars:
-#     if env_vars["DIR_COSIM"] is None:
-#         raise ValueError(
-#             "Environment variable 'DIR_COSIM' is set to None. Please set it to a valid path."
-#         )
-#     DIR_COSIM = Path(env_vars["DIR_COSIM"])
-# else:
-#     raise KeyError(
-#         "Environment variable 'DIR_COSIM' not found in .env file. Please add it."
-#     )
 
 
 if "DIR_OLD_COSIM" in env_vars:

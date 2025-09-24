@@ -1,4 +1,4 @@
-name: fifo-opt
+name: fifo-advisor
 channels:
   - conda-forge
   - https://sharc-lab.github.io/LightningSim/repo

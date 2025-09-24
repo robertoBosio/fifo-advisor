@@ -36,5 +36,5 @@ ResMLP & 4.94 days & 141.41 s. & 5.77 s. & 4.65 s. & 26.22 s. & 45.87 s. \\
 \bottomrule
 \end{tabular}
 \caption{Comparison of Co-Simulation and FIFO Optimization runtimes for different designs.}
-\label{tab:cosim_fifo_opt_comparison}
+\label{tab:cosim_fifo_advisor_comparison}
 \end{table*}

@@ -1,10 +1,9 @@
 import enum
 import itertools
 import random
-import time
 from collections import defaultdict
 from copy import deepcopy
-from typing import TypeAlias, Union
+from typing import Union
 
 import numpy as np
 from lightningsim.trace_file import ResolvedStream
@@ -19,7 +18,7 @@ from pymoo.optimize import minimize as minimize_pymoo
 from scipy.optimize import Bounds, dual_annealing
 from scipy.optimize._optimize import OptimizeResult
 
-from fifo_opt.opt_env import (
+from fifo_advisor.opt_env import (
     EvalResult,
     FIFOOptimizer,
     LSEnv,
@@ -322,7 +321,7 @@ class GAOptimizer(FIFOOptimizer):
             self,
             n_fifos=self.sim_env.num_fifos,
             fifo_ids=self.fifo_ids,
-            fifo_upper_bounds=self.sim_env.fifo_sizes_base,
+            fifo_upper_bounds=self.sim_env.fifo_sizes_base,  # type: ignore
         )
 
         self.algorithm = NSGA2(
@@ -392,7 +391,7 @@ class SimulatedAnnealingOptimizer(FIFOOptimizer):
             sampled_x0 = []
             for sample_config in sampled_configs:
                 x0 = [sample_config[fifo_id] for fifo_id in self.fifo_ids]
-                sampled_x0.append(x0)
+                sampled_x0.append(x0)  # type: ignore
         else:
             sampled_x0 = [None for _ in range(self.n_scaling_factors)]
 
@@ -512,8 +511,8 @@ class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
                 )
 
             bounds = Bounds(
-                lb=[l for l, u in self.fifos_dse_space_bounds],
-                ub=[u for l, u in self.fifos_dse_space_bounds],
+                lb=[l for l, u in self.fifos_dse_space_bounds],  # type: ignore
+                ub=[u for l, u in self.fifos_dse_space_bounds],  # type: ignore
             )
 
             x0 = None
@@ -601,7 +600,7 @@ class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
                 [fifo.id for fifo in fifos], fifos[0].width
             )
             if ds == [2]:
-                ds: list[int] = [2, 64 * fifos[0].width]
+                ds: list[int] = [2, 64 * fifos[0].width]  # type: ignore
             self.grouped_fifos_dse_space[fifo_group] = ds
 
         self.fifo_group_bounds: list[tuple[int, int]] = []
@@ -641,8 +640,8 @@ class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
                 )
 
             bounds = Bounds(
-                lb=[l for l, u in self.fifo_group_bounds],
-                ub=[u for l, u in self.fifo_group_bounds],
+                lb=[l for l, u in self.fifo_group_bounds],  # type: ignore
+                ub=[u for l, u in self.fifo_group_bounds],  # type: ignore
             )
 
             x0 = None

@@ -1,11 +1,17 @@
 [project]
-name = "fifo-opt"
+name = "fifo-advisor"
 version = "0.1.0"
-description = "Add your description here"
+description = "FIFOAdvisor is a tool to optimize FIFO sizes in high-level synthesis designs to minimize latency and resource usage while ensuring deadlock-free FIFO sizing."
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.11"
 dependencies = [
-    "pandas>=2.3.2",
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "seaborn",
+    "scipy",
+    "pymoo",
 ]
 
 [build-system]
@@ -16,4 +22,10 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 
 [project.scripts]
-fifo-opt = "fifo_opt.main:cli"
+fifo-advisor = "fifo_advisor.main:cli"
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "mypy",
+]

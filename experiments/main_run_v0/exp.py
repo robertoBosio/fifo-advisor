@@ -6,12 +6,11 @@ from pathlib import Path
 import pandas as pd
 from dotenv import dotenv_values
 
-from fifo_opt.automation import TestCase
-from fifo_opt.opt_env import LSEnv, is_pareto_efficient_simple
-from fifo_opt.solvers import (
+from fifo_advisor.automation import TestCase
+from fifo_advisor.opt_env import LSEnv, is_pareto_efficient_simple
+from fifo_advisor.solvers import (
     DiscreteSimulatedAnnealingOptimizer,
     GroupedDiscreteSimulatedAnnealingOptimizer,
-    GroupRandomInitializedSimulatedAnnealingOptimizer,
     GroupRandomSearchOptimizer,
     HeuristicOptimizer,
     RandomSearchOptimizer,
@@ -150,8 +149,6 @@ for design in designs_all_filtered:
 df_baseline_dumb = pd.DataFrame(data_all_baseline_dumb)
 df_baseline_dumb.to_csv(DIR_DATA / "data_baseline_dumb.csv", index=False)
 
-exit()
-
 
 optimizers: dict[str, partial[T_FIFOOptimizer]] = {
     "random_search": partial(
@@ -165,10 +162,6 @@ optimizers: dict[str, partial[T_FIFOOptimizer]] = {
     "heuristic": partial(
         HeuristicOptimizer,
     ),
-    # "init_simulated_annealing": partial(
-    #     GroupRandomInitializedSimulatedAnnealingOptimizer,
-    #     n_samples=1000,
-    # ),
     "discrete_simulated_annealing": partial(
         DiscreteSimulatedAnnealingOptimizer,
         maxfun=1000,

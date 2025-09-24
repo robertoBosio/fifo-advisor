@@ -1,20 +1,24 @@
 import shutil
 from pathlib import Path
+from pprint import pp
 
 from dotenv import dotenv_values
 from joblib import Parallel, delayed
 
-from fifo_opt.automation import TestCase
+from fifo_advisor.automation import TestCase
 
 DIR_CURRENT = Path(__file__).parent
 
 
 DIR_ROOT = DIR_CURRENT.parent.parent
 
-# DIR_TEST_CASES = DIR_ROOT / "test_cases"
-# DIR_TEST_CASES = DIR_ROOT / "test_cases_streamhls_large"
-DIR_TEST_CASES = DIR_ROOT / "test_cases_synthetic"
+DIR_TEST_CASES = DIR_ROOT / "test_cases_streamhls"
+DIR_TEST_CASES_LARGE = DIR_ROOT / "test_cases_streamhls_large"
+
 assert DIR_TEST_CASES.exists(), f"Test case dir {DIR_TEST_CASES} does not exist"
+assert DIR_TEST_CASES_LARGE.exists(), (
+    f"Test case dir {DIR_TEST_CASES_LARGE} does not exist"
+)
 
 
 ENV_FILE: Path = DIR_CURRENT.parent / ".env"
@@ -39,16 +43,15 @@ if not DIR_PRE_SYNTH.exists():
     DIR_PRE_SYNTH.mkdir(exist_ok=True)
 
 
-designs_to_test: list[str] = sorted([d.name for d in DIR_TEST_CASES.glob("*")])
+designs_to_test: list[str] = sorted(
+    [d.name for d in DIR_TEST_CASES.glob("*")]
+) + sorted([d.name for d in DIR_TEST_CASES_LARGE.glob("*")])
 designs_to_ignore: list[str] = []
 designs_to_test = [
     design for design in designs_to_test if design not in designs_to_ignore
 ]
 
-designs_to_keep = ["scatter_gather_v3"]
-designs_to_test = [design for design in designs_to_test if design in designs_to_keep]
-
-print(designs_to_test)
+pp(designs_to_test)
 
 N_JOBS = 24
 

@@ -1,30 +1,22 @@
-import itertools
 import time
-from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from functools import partial
 from pathlib import Path
-from pprint import pp
 
-import numpy as np
 import pandas as pd
 import tqdm
 from dotenv import dotenv_values
 from joblib import Parallel, delayed
-from matplotlib import pyplot as plt
 
-from fifo_opt.automation import TestCase
-from fifo_opt.opt_env import LSEnv, is_pareto_efficient_simple
-from fifo_opt.solvers import (
+from fifo_advisor.automation import TestCase
+from fifo_advisor.opt_env import LSEnv
+from fifo_advisor.solvers import (
     DiscreteSimulatedAnnealingOptimizer,
     GroupedDiscreteSimulatedAnnealingOptimizer,
-    GroupRandomInitializedSimulatedAnnealingOptimizer,
     GroupRandomSearchOptimizer,
     HeuristicOptimizer,
     RandomSearchOptimizer,
     T_FIFOOptimizer,
-    count_configs,
-    count_configs_grouped,
 )
 
 N_SAMPLES = 1_000
@@ -151,4 +143,4 @@ data = Parallel(n_jobs=N_JOBS)(
 )
 
 df = pd.DataFrame(data)
-df.to_csv(DIR_DATA / "fifo_opt_runtimes.csv", index=False)
+df.to_csv(DIR_DATA / "fifo_advisor_runtimes.csv", index=False)
