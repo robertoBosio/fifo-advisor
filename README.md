@@ -1,4 +1,4 @@
-# FIFOAdvisor
+# FIFOAdvisor: A DSE Framework for Automated FIFO Sizing of High-Level Synthesis Designs
 
 FIFOAdvisor is a framework that optimizes FIFO depths in high-level synthesis designs, specifically targeting Vitis HLS. It can search for optimal FIFO depths in seconds to minimize design latency and BRAM usage in a way that also avoids deadlocks. FIFOAdvisor does this by using LightningSim, a fast cycle-accurate simulator for HLS designs, to perform runtime analysis and explore different FIFO size configurations in seconds to perform rapid design space exploration (DSE).
 
