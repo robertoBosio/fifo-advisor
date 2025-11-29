@@ -25,6 +25,10 @@ class EvalResult:
     timestamp: float | None = None
 
 
+EvalResults = list[EvalResult]
+MultiEvalResults = list[EvalResults]
+
+
 class LSEnv:
     def __init__(
         self,
@@ -173,6 +177,16 @@ class FIFOOptimizer(ABC):
 
     @abstractmethod
     def solve(self) -> list[EvalResult]:
+        pass
+
+
+class MultiFIFOOptimizer(ABC):
+    def __init__(self, sim_envs: list[LSEnv], n_jobs_over_envs: int = 1):
+        self.sim_envs: list[LSEnv] = sim_envs
+        self.n_jobs_over_envs = n_jobs_over_envs
+
+    @abstractmethod
+    def solve(self) -> MultiEvalResults:
         pass
 
 
