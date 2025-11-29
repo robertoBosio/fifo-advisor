@@ -1,12 +1,14 @@
+import json
 from functools import partial
 from pathlib import Path
+from pprint import pp
 from statistics import mean
 from typing import Callable, Iterable
 
 import pandas as pd
 
 from fifo_advisor.automation import TestCase
-from fifo_advisor.opt_env import LSEnv, MultiFIFOOptimizer
+from fifo_advisor.opt_env import EvalResult, LSEnv, MultiFIFOOptimizer
 from fifo_advisor.solvers import (
     MultiDiscreteSimulatedAnnealingOptimizer,  # noqa F401
     MultiGroupedDiscreteSimulatedAnnealingOptimizer,
@@ -81,6 +83,58 @@ optimizers: dict[str, Callable[..., MultiFIFOOptimizer]] = {
         fn_agg_bram=fn_agg_bram,
     ),
 }
+
+
+def run_baseline_eval(design_cases: list[TestCase]):
+    sim_envs = [
+        LSEnv(
+            design.solution_dir,
+        )
+        for design in design_cases
+    ]
+
+    # compute the baseline max
+
+    baseline_results: list[EvalResult] = []
+    for sim_env in sim_envs:
+        result = sim_env.eval_solution_default()
+        baseline_results.append(result)
+
+    # pp(baseline_results)
+
+    deadlocks = [res.deadlock for res in baseline_results]
+    print(f"Baseline deadlocks: {deadlocks}")
+
+    vals_latency = [res.latency for res in baseline_results if res.latency is not None]
+    vals_bram = [
+        res.bram_usage_total
+        for res in baseline_results
+        if res.bram_usage_total is not None
+    ]
+    print(f"Baseline latency: {vals_latency}")
+    print(f"Baseline BRAM: {vals_bram}")
+
+    val_avg_latency = mean(vals_latency)
+    val_avg_bram = mean(vals_bram)
+    return (
+        baseline_results,
+        val_avg_latency,
+        val_avg_bram,
+    )
+
+
+baseline_results, val_avg_latency, val_avg_bram = run_baseline_eval(test_cases)
+data_baseline = {
+    "designs": [design.name for design in test_cases],
+    "vals_latency": [res.latency for res in baseline_results],
+    "vals_bram": [res.bram_usage_total for res in baseline_results],
+    "avg_latency": val_avg_latency,
+    "avg_bram": val_avg_bram,
+}
+
+fp_data_baseline = DIR_DATA / "data_baseline_multi_eval_pna.json"
+fp_data_baseline.write_text(json.dumps(data_baseline, indent=4))
+exit()
 
 
 def run_single_eval(design_cases: list[TestCase], optimizer_name: str):

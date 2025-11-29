@@ -964,12 +964,6 @@ def plot_design(design):
     return fig
 
 
-# for design in designs:
-#     fig = plot_design(design)
-#     fig.savefig(DIR_FIGURES / f"{design}.png", dpi=300)
-#     plt.close(fig)
-
-
 def parallel_fn_plot_design(design):
     fig = plot_design(design)
     fig.savefig(DIR_FIGURES / f"{design}.png", dpi=300, pad_inches=0)
