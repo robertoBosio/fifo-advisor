@@ -2,6 +2,8 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
 
+import pandas as pd
+
 from fifo_advisor.automation import TestCase
 from fifo_advisor.opt_env import LSEnv, MultiFIFOOptimizer
 from fifo_advisor.solvers import (
@@ -48,10 +50,6 @@ test_cases = test_cases[:]  # limit to first design for faster testing
 N_JOBS_OVER_ENVS = 64
 
 optimizers: dict[str, partial[MultiFIFOOptimizer]] = {
-    # "random_search": partial(
-    #     RandomSearchOptimizer,
-    #     n_samples=1000,
-    # ),
     "multi_group_random_search": partial(
         MultiGroupRandomSearchOptimizer,
         n_samples=5000,
@@ -61,10 +59,6 @@ optimizers: dict[str, partial[MultiFIFOOptimizer]] = {
         MultiHeuristicOptimizer,
         n_jobs_over_envs=N_JOBS_OVER_ENVS,
     ),
-    # "init_simulated_annealing": partial(
-    #     GroupRandomInitializedSimulatedAnnealingOptimizer,
-    #     n_samples=1000,
-    # ),
     "multi_discrete_simulated_annealing": partial(
         MultiDiscreteSimulatedAnnealingOptimizer,
         maxfun=5000 // 4,
@@ -73,10 +67,11 @@ optimizers: dict[str, partial[MultiFIFOOptimizer]] = {
         n_jobs_over_envs=N_JOBS_OVER_ENVS,
     ),
     # "grouped_discrete_simulated_annealing": partial(
-    #     GroupedDiscreteSimulatedAnnealingOptimizer,
+    #     MultiGroupedDiscreteSimulatedAnnealingOptimizer,
     #     maxfun=5000 // 4,
     #     n_scaling_factors=4,
     #     init_with_largest=True,
+    #     n_jobs_over_envs=N_JOBS_OVER_ENVS,
     # ),
 }
 
@@ -108,10 +103,24 @@ def run_single_eval(design_cases: list[TestCase], optimizer_name: str):
         print(e)
         return
 
+    data = []
+    for design_case, results_case in zip(design_cases, results):
+        for idx, result in enumerate(results_case):
+            data_point = {
+                "design": design_case.name,
+                "optimizer_name": optimizer_name,
+                "eval_index": idx,
+                "latency": result.latency,
+                "bram": result.bram_usage_total,
+                "deadlock": result.deadlock,
+            }
+            data.append(data_point)
+    return data
+
 
 combos = [
-    # (test_cases, "multi_group_random_search"),
-    # (test_cases, "multi_heuristic"),
+    (test_cases, "multi_group_random_search"),
+    (test_cases, "multi_heuristic"),
     (test_cases, "multi_discrete_simulated_annealing"),
 ]
 
@@ -120,5 +129,13 @@ combos = [
 #     data_all = executor.map(lambda x: run_single_eval(*x), combos)
 
 # use joblib
+data_all = []
 for combo in combos:
-    run_single_eval(*combo)
+    data = run_single_eval(*combo)
+    data_all.extend(data)
+
+
+fp_data = DIR_DATA / "data_multi_eval_pna.csv"
+df_multi_eval = pd.DataFrame(data_all)
+df_multi_eval.to_csv(fp_data, index=False)
+print(f"Saved multi-eval data to {fp_data}")

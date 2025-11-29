@@ -124,7 +124,7 @@ def eval_solution_parallel_over_envs(
     all_results: MultiEvalResults = []
 
     def worker(env: LSEnv) -> list[EvalResult]:
-        print(f"Evaluating in env: {env.vitis_hls_solution_dir}")
+        # print(f"Evaluating in env: {env.vitis_hls_solution_dir}")
         return env.eval_solution_parallel(sampled_configs)
 
     with ThreadPool(processes=n_jobs) as pool:
