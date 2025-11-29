@@ -3,12 +3,10 @@ import itertools
 import random
 from collections import defaultdict
 from copy import deepcopy
-from functools import partial
 from multiprocessing.pool import ThreadPool
 from typing import Union
 
 import numpy as np
-from joblib import Parallel, delayed
 from lightningsim.trace_file import ResolvedStream
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.core.callback import Callback
@@ -27,6 +25,7 @@ from fifo_advisor.opt_env import (
     LSEnv,
     MultiEvalResults,
     MultiFIFOOptimizer,
+    T_fn_agg,
     is_pareto_efficient_simple,
 )
 
@@ -118,34 +117,60 @@ def get_fifo_id_to_name_map(sim_env: LSEnv) -> dict[int, str]:
     return fifo_id_to_name
 
 
-def eval_solution_parallel_over_envs(
-    sim_envs: list[LSEnv], sampled_configs: list[dict[int, int]], n_jobs: int = 1
-) -> MultiEvalResults:
-    all_results: MultiEvalResults = []
+# def eval_solution_parallel_over_envs(
+#     sim_envs: list[LSEnv], sampled_configs: list[dict[int, int]], n_jobs: int = 1
+# ) -> MultiEvalResults:
+#     all_results: MultiEvalResults = []
 
-    def worker(env: LSEnv) -> list[EvalResult]:
-        # print(f"Evaluating in env: {env.vitis_hls_solution_dir}")
-        return env.eval_solution_parallel(sampled_configs)
+#     def worker(env: LSEnv) -> list[EvalResult]:
+#         # print(f"Evaluating in env: {env.vitis_hls_solution_dir}")
+#         return env.eval_solution_parallel(sampled_configs)
 
-    with ThreadPool(processes=n_jobs) as pool:
-        results = pool.map(worker, sim_envs, chunksize=1)
-        all_results.extend(results)
+#     with ThreadPool(processes=n_jobs) as pool:
+#         results = pool.map(worker, sim_envs, chunksize=1)
+#         all_results.extend(results)
 
-    return all_results
+#     return all_results
+
+
+# def eval_solution_single_over_envs(
+#     sim_envs: list[LSEnv], sampled_config: dict[int, int], n_jobs: int = 1
+# ) -> list[EvalResult]:
+#     all_results: list[EvalResult] = []
+
+#     def worker(env: LSEnv) -> EvalResult:
+#         # print(f"Evaluating in env: {env.vitis_hls_solution_dir}")
+#         return env.eval_solution_single(sampled_config)
+
+#     with ThreadPool(processes=n_jobs) as pool:
+#         results = pool.map(worker, sim_envs, chunksize=1)
+#         all_results.extend(results)
+#     return all_results
 
 
 def eval_solution_single_over_envs(
-    sim_envs: list[LSEnv], sampled_config: dict[int, int], n_jobs: int = 1
+    pool: ThreadPool,
+    sim_envs: list[LSEnv],
+    sampled_config: dict[int, int],
 ) -> list[EvalResult]:
-    all_results: list[EvalResult] = []
-
     def worker(env: LSEnv) -> EvalResult:
         # print(f"Evaluating in env: {env.vitis_hls_solution_dir}")
         return env.eval_solution_single(sampled_config)
 
-    with ThreadPool(processes=n_jobs) as pool:
-        results = pool.map(worker, sim_envs, chunksize=1)
-        all_results.extend(results)
+    all_results = pool.map(worker, sim_envs, chunksize=1)
+    return all_results
+
+
+def eval_solution_parallel_over_envs(
+    pool: ThreadPool,
+    sim_envs: list[LSEnv],
+    sampled_configs: list[dict[int, int]],
+) -> MultiEvalResults:
+    def worker(env: LSEnv) -> list[EvalResult]:
+        # print(f"Evaluating in env: {env.vitis_hls_solution_dir}")
+        return env.eval_solution_parallel(sampled_configs)
+
+    all_results = pool.map(worker, sim_envs, chunksize=1)
     return all_results
 
 
@@ -186,6 +211,8 @@ class MultiRandomSearchOptimizer(MultiFIFOOptimizer):
         n_samples: int = 100,
         seed: int = 7,
         n_jobs_over_envs: int = 1,
+        fn_agg_latency: T_fn_agg = max,
+        fn_agg_bram: T_fn_agg = max,
     ):
         super().__init__(sim_envs)
 
@@ -195,8 +222,12 @@ class MultiRandomSearchOptimizer(MultiFIFOOptimizer):
         self.r = random.Random(seed)
 
         self.n_jobs_over_envs = n_jobs_over_envs
+        self.fn_agg_latency = fn_agg_latency
+        self.fn_agg_bram = fn_agg_bram
 
     def solve(self) -> list[list[EvalResult]]:
+        thread_pool = ThreadPool(processes=self.n_jobs_over_envs)
+
         all_same_fifos(self.sim_envs, throw_error=True)
 
         fifo_dse_spaces = []
@@ -233,8 +264,11 @@ class MultiRandomSearchOptimizer(MultiFIFOOptimizer):
         #     all_results.append(results)
 
         all_results = eval_solution_parallel_over_envs(
-            self.sim_envs, sampled_configs, n_jobs=self.n_jobs_over_envs
+            thread_pool, self.sim_envs, sampled_configs
         )
+
+        thread_pool.close()
+        thread_pool.join()
 
         return all_results
 
@@ -295,6 +329,8 @@ class MultiGroupRandomSearchOptimizer(MultiFIFOOptimizer):
         n_samples: int = 100,
         seed: int = 7,
         n_jobs_over_envs: int = 1,
+        fn_agg_latency: T_fn_agg = max,
+        fn_agg_bram: T_fn_agg = max,
     ):
         super().__init__(sim_envs)
 
@@ -304,8 +340,12 @@ class MultiGroupRandomSearchOptimizer(MultiFIFOOptimizer):
         self.r = random.Random(seed)
 
         self.n_jobs_over_envs = n_jobs_over_envs
+        self.fn_agg_latency = fn_agg_latency
+        self.fn_agg_bram = fn_agg_bram
 
     def solve(self) -> MultiEvalResults:
+        thread_pool = ThreadPool(processes=self.n_jobs_over_envs)
+
         all_same_fifos(self.sim_envs, throw_error=True)
 
         fifo_groups_all: list[defaultdict[str, list[ResolvedStream]]] = []
@@ -354,16 +394,801 @@ class MultiGroupRandomSearchOptimizer(MultiFIFOOptimizer):
                     sample[fifo.id] = group_depths
             sampled_configs.append(sample)
 
-        # results_all_envs = []
-        # for sim_env in self.sim_envs:
-        #     results = sim_env.eval_solution_parallel(sampled_configs)
-        #     results_all_envs.append(results)
-
         results_all_envs = eval_solution_parallel_over_envs(
-            self.sim_envs, sampled_configs, n_jobs=self.n_jobs_over_envs
+            thread_pool, self.sim_envs, sampled_configs
         )
+        thread_pool.close()
+        thread_pool.join()
 
         return results_all_envs
+
+
+class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
+    def __init__(
+        self,
+        sim_env: LSEnv,
+        maxfun: int = 100,
+        n_scaling_factors: int = 8,
+        round_type: ROUND_TYPE = ROUND_TYPE.RINT,
+        init_with_largest: bool = False,
+    ):
+        super().__init__(sim_env)
+        self.maxfun = maxfun
+        self.round_type = round_type
+        self.init_with_largest = init_with_largest
+
+        self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
+        self.n_scaling_factors = n_scaling_factors
+        self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
+            self.n_scaling_factors
+        )
+
+        self.fifos_dse_space = {}
+
+        for fifo in self.sim_env.fifos:
+            fifo_id = fifo.id
+            try:
+                fifo_depths = self.sim_env.trace_base.compiled.get_fifo_design_space(
+                    [fifo_id], fifo.width
+                )
+                if fifo_depths == [2]:
+                    fifo_depths = [2, 64 * fifo.width]
+                print(f"FIFO {fifo_id} design space: {fifo_depths}")
+            except Exception:
+                fifo_depths = [2, 64 * fifo.width]
+            self.fifos_dse_space[fifo_id] = fifo_depths
+
+        self.fifos_dse_space_bounds = []
+        for fifo_id in self.fifo_ids:
+            bounds = (0, len(self.fifos_dse_space[fifo_id]) - 1)
+            self.fifos_dse_space_bounds.append(bounds)
+
+    def solve(self) -> list[EvalResult]:
+        results = []
+
+        results_all = []
+
+        for idx in range(self.n_scaling_factors):
+            scaling_factor_latency = self.dual_objective_scaling_factors[idx, 0]
+            scaling_factor_bram = self.dual_objective_scaling_factors[idx, 1]
+
+            def objective_function(x: np.ndarray) -> float:
+                x = round(x, round_type=self.round_type).astype(int)
+                # sample = dict(zip(self.fifo_ids, x))  # Directly construct dictionary
+                sample = {}
+                for fifo_id, x_val in zip(self.fifo_ids, x):
+                    selected_fifo_size = self.fifos_dse_space[fifo_id][x_val]
+                    sample[fifo_id] = selected_fifo_size
+
+                y = self.sim_env.eval_solution_single(sample)
+                results_all.append(y)
+
+                if y.deadlock:
+                    return np.inf
+
+                return (
+                    scaling_factor_latency * y.latency
+                    + scaling_factor_bram * y.bram_usage_total
+                )
+
+            bounds = Bounds(
+                lb=[lower for lower, _upper in self.fifos_dse_space_bounds],  # type: ignore
+                ub=[upper for _lower, upper in self.fifos_dse_space_bounds],  # type: ignore
+            )
+
+            x0 = None
+            if self.init_with_largest:
+                x0 = np.array(
+                    [
+                        len(self.fifos_dse_space[fifo_id]) - 1
+                        for fifo_id in self.fifo_ids
+                    ]
+                )
+
+            result = dual_annealing(
+                objective_function,
+                bounds=bounds,
+                maxfun=self.maxfun,
+                no_local_search=True,
+                rng=7,
+                x0=x0,
+            )
+            x_rounded = round(result.x, self.round_type)
+            x_python = x_rounded.tolist()
+            x_python_int = [int(x) for x in x_python]
+
+            sol_sample = {
+                fifo_id: size for fifo_id, size in zip(self.fifo_ids, x_python_int)
+            }
+            sol_eval_results = self.sim_env.eval_solution_single(sol_sample)
+            results.append(sol_eval_results)
+
+        return results_all
+
+
+class MultiDiscreteSimulatedAnnealingOptimizer(MultiFIFOOptimizer):
+    def __init__(
+        self,
+        sim_envs: list[LSEnv],
+        maxfun: int = 100,
+        n_scaling_factors: int = 8,
+        round_type: ROUND_TYPE = ROUND_TYPE.RINT,
+        init_with_largest: bool = False,
+        n_jobs_over_envs: int = 1,
+        fn_agg_latency: T_fn_agg = max,
+        fn_agg_bram: T_fn_agg = max,
+    ):
+        super().__init__(sim_envs)
+        self.sim_envs = sim_envs
+        self.maxfun = maxfun
+        self.round_type = round_type
+        self.init_with_largest = init_with_largest
+
+        self.n_jobs_over_envs = n_jobs_over_envs
+        self.fn_agg_latency = fn_agg_latency
+        self.fn_agg_bram = fn_agg_bram
+
+        # Ensure all FIFO sets are identical across envs
+        all_same_fifos(self.sim_envs, throw_error=True)
+
+        # Use FIFO ids from the first env as the canonical ordering
+        self.fifo_ids = [fifo.id for fifo in self.sim_envs[0].fifos]
+
+        self.n_scaling_factors = n_scaling_factors
+        self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
+            self.n_scaling_factors
+        )
+
+        # Build a unified discrete design space for each FIFO id
+        # by taking the union of all depths across all envs
+        self.fifos_dse_space: dict[int, list[int]] = {}
+        for fifo in self.sim_envs[0].fifos:
+            fifo_id = fifo.id
+            fifo_width = fifo.width
+
+            depths_union: set[int] = set()
+            for sim_env in self.sim_envs:
+                try:
+                    ds = sim_env.trace_base.compiled.get_fifo_design_space(
+                        [fifo_id], fifo_width
+                    )
+                    if ds == [2]:
+                        ds = [2, 64 * fifo_width]
+                except Exception:
+                    ds = [2, 64 * fifo_width]
+                depths_union.update(ds)
+
+            self.fifos_dse_space[fifo_id] = sorted(depths_union)
+            print(
+                f"[MultiDiscreteSA] FIFO {fifo_id} unified design space: "
+                f"{self.fifos_dse_space[fifo_id]}"
+            )
+
+        # Bounds are over indices into each fifo's discrete design space
+        self.fifos_dse_space_bounds: list[tuple[int, int]] = []
+        for fifo_id in self.fifo_ids:
+            bounds = (0, len(self.fifos_dse_space[fifo_id]) - 1)
+            self.fifos_dse_space_bounds.append(bounds)
+
+    def solve(self) -> MultiEvalResults:
+        thread_pool = ThreadPool(processes=self.n_jobs_over_envs)
+
+        # One list of EvalResults per env
+        results_all_envs: MultiEvalResults = [[] for _ in self.sim_envs]
+
+        for idx in range(self.n_scaling_factors):
+            scaling_factor_latency = self.dual_objective_scaling_factors[idx, 0]
+            scaling_factor_bram = self.dual_objective_scaling_factors[idx, 1]
+
+            def objective_function(x: np.ndarray) -> float:
+                # x are continuous indices; round to nearest integer and clamp
+                x = round(x, round_type=self.round_type).astype(int)
+
+                # Build FIFO size sample by mapping index -> actual depth
+                sample: dict[int, int] = {}
+                for fifo_id, x_val in zip(self.fifo_ids, x):
+                    # Defensive clamp (should already be within bounds due to Bounds)
+                    x_idx = max(0, min(x_val, len(self.fifos_dse_space[fifo_id]) - 1))
+                    selected_fifo_size = self.fifos_dse_space[fifo_id][x_idx]
+                    sample[fifo_id] = selected_fifo_size
+
+                # Evaluate this sample on all sim envs
+                # per_env_results: list[EvalResult] = []
+                # for env in self.sim_envs:
+                #     res = env.eval_solution_single(sample)
+                #     per_env_results.append(res)
+
+                per_env_results = eval_solution_single_over_envs(
+                    thread_pool, self.sim_envs, sample
+                )
+
+                # Log results per env
+                for env_idx, res in enumerate(per_env_results):
+                    results_all_envs[env_idx].append(res)
+
+                # If ANY env deadlocks, solution is invalid
+                if any(res.deadlock for res in per_env_results):
+                    return np.inf
+
+                # Aggregate latency and resource usage as max across envs
+                latencies: list[float] = []
+                brams: list[int] = []
+                for res in per_env_results:
+                    # If any metric is missing, treat as invalid
+                    if res.latency is None or res.bram_usage_total is None:
+                        return np.inf
+                    latencies.append(res.latency)
+                    brams.append(res.bram_usage_total)
+                brams_float = [float(b) for b in brams]
+
+                # max_latency = max(latencies)
+                # max_bram = max(brams)
+                agg_latency = self.fn_agg_latency(latencies)
+                agg_bram = self.fn_agg_bram(brams_float)
+
+                return (
+                    scaling_factor_latency * agg_latency
+                    + scaling_factor_bram * agg_bram
+                )
+
+            bounds = Bounds(
+                lb=[lower for (lower, _upper) in self.fifos_dse_space_bounds],  # type: ignore
+                ub=[upper for (_lower, upper) in self.fifos_dse_space_bounds],  # type: ignore
+            )
+
+            x0 = None
+            if self.init_with_largest:
+                # Initialize with the largest discrete option index for each FIFO
+                x0 = np.array(
+                    [
+                        len(self.fifos_dse_space[fifo_id]) - 1
+                        for fifo_id in self.fifo_ids
+                    ]
+                )
+
+            # Run dual annealing over the discrete index space
+            _result: OptimizeResult = dual_annealing(
+                objective_function,
+                bounds=bounds,
+                maxfun=self.maxfun,
+                no_local_search=True,
+                rng=7,
+                x0=x0,
+            )
+
+        thread_pool.close()
+        thread_pool.join()
+
+        # We return all evaluations per env (consistent with MultiRandomSearch style)
+        return results_all_envs
+
+
+class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
+    def __init__(
+        self,
+        sim_env: LSEnv,
+        maxfun: int = 100,
+        n_scaling_factors: int = 8,
+        round_type: ROUND_TYPE = ROUND_TYPE.RINT,
+        init_with_largest: bool = False,
+    ):
+        super().__init__(sim_env)
+        self.maxfun = maxfun
+        self.round_type = round_type
+        self.init_with_largest = init_with_largest
+
+        self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
+        self.n_scaling_factors = n_scaling_factors
+        self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
+            self.n_scaling_factors
+        )
+
+        # self.fifos_dse_space = {}
+        # for fifo in self.sim_env.fifos:
+        #     fifo_id = fifo.id
+        #     fifo_depths = self.sim_env.trace_base.compiled.get_fifo_design_space(
+        #         [fifo_id], fifo.width
+        #     )
+        #     self.fifos_dse_space[fifo_id] = fifo_depths
+
+        # self.fifos_dse_space_bounds = []
+        # for fifo_id in self.fifo_ids:
+        #     bounds = (0, len(self.fifos_dse_space[fifo_id]) - 1)
+        #     self.fifos_dse_space_bounds.append(bounds)
+
+        self.fifo_groups: dict[str, list[ResolvedStream]] = defaultdict(list)
+        for fifo in self.sim_env.fifos:
+            self.fifo_groups[fifo.get_display_name()].append(fifo)
+
+        self.fifo_group_names = list(self.fifo_groups.keys())
+
+        self.fifo_ids_groups = defaultdict(list)
+        for k, v in self.fifo_groups.items():
+            for fifo in v:
+                self.fifo_ids_groups[k].append(fifo.id)
+
+        self.grouped_fifos_dse_space = {}
+        for fifo_group, fifos in self.fifo_groups.items():
+            # self.grouped_fifos_dse_space[fifo_group] = (
+            #     self.sim_env.trace_base.compiled.get_fifo_design_space(
+            #         [fifo.id for fifo in fifos], fifos[0].width
+            #     )
+            # )
+            ds = self.sim_env.trace_base.compiled.get_fifo_design_space(
+                [fifo.id for fifo in fifos], fifos[0].width
+            )
+            if ds == [2]:
+                ds: list[int] = [2, 64 * fifos[0].width]  # type: ignore
+            self.grouped_fifos_dse_space[fifo_group] = ds
+
+        self.fifo_group_bounds: list[tuple[int, int]] = []
+        for fifo_group in self.fifo_group_names:
+            bounds = (0, len(self.grouped_fifos_dse_space[fifo_group]) - 1)
+            self.fifo_group_bounds.append(bounds)
+
+        # print(self.fifo_group_bounds)
+
+    def solve(self) -> list[EvalResult]:
+        results = []
+
+        results_all = []
+
+        for idx in range(self.n_scaling_factors):
+            scaling_factor_latency = self.dual_objective_scaling_factors[idx, 0]
+            scaling_factor_bram = self.dual_objective_scaling_factors[idx, 1]
+
+            def objective_function(x: np.ndarray) -> float:
+                x = round(x, round_type=self.round_type).astype(int)
+
+                sample = {}
+                for fifo_group, x_val in zip(self.fifo_group_names, x):
+                    selected_fifo_size = self.grouped_fifos_dse_space[fifo_group][x_val]
+                    for fifo_id in self.fifo_ids_groups[fifo_group]:
+                        sample[fifo_id] = selected_fifo_size
+
+                y = self.sim_env.eval_solution_single(sample)
+                results_all.append(y)
+
+                if y.deadlock:
+                    return np.inf
+
+                return (
+                    scaling_factor_latency * y.latency
+                    + scaling_factor_bram * y.bram_usage_total
+                )
+
+            bounds = Bounds(
+                lb=[lower for lower, _upper in self.fifo_group_bounds],  # type: ignore
+                ub=[upper for _lower, upper in self.fifo_group_bounds],  # type: ignore
+            )
+
+            x0 = None
+            if self.init_with_largest:
+                x0 = np.array(
+                    [
+                        len(self.grouped_fifos_dse_space[fifo_group]) - 1
+                        for fifo_group in self.fifo_group_names
+                    ]
+                )
+
+            result: OptimizeResult = dual_annealing(
+                objective_function,
+                bounds=bounds,
+                maxfun=self.maxfun,
+                no_local_search=True,
+                rng=7,
+                x0=x0,
+            )
+            x_rounded = round(result.x, self.round_type)
+            x_python = x_rounded.tolist()
+            x_python_int = [int(x) for x in x_python]
+
+            sol_sample = {
+                fifo_id: size for fifo_id, size in zip(self.fifo_ids, x_python_int)
+            }
+            sol_eval_results = self.sim_env.eval_solution_single(sol_sample)
+            results.append(sol_eval_results)
+
+        return results_all
+
+
+class MultiGroupedDiscreteSimulatedAnnealingOptimizer(MultiFIFOOptimizer):
+    def __init__(
+        self,
+        sim_envs: list[LSEnv],
+        maxfun: int = 100,
+        n_scaling_factors: int = 8,
+        round_type: ROUND_TYPE = ROUND_TYPE.RINT,
+        init_with_largest: bool = False,
+        n_jobs_over_envs: int = 1,
+        fn_agg_latency: T_fn_agg = max,
+        fn_agg_bram: T_fn_agg = max,
+    ):
+        super().__init__(sim_envs)
+        self.sim_envs = sim_envs
+        self.maxfun = maxfun
+        self.round_type = round_type
+        self.init_with_largest = init_with_largest
+        self.n_jobs_over_envs = n_jobs_over_envs
+        self.fn_agg_latency = fn_agg_latency
+        self.fn_agg_bram = fn_agg_bram
+
+        # Sanity: same FIFO sets across envs
+        all_same_fifos(self.sim_envs, throw_error=True)
+
+        self.n_scaling_factors = n_scaling_factors
+        self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
+            self.n_scaling_factors
+        )
+
+        # --------------------------------------------------
+        # 1. Build FIFO groups per env and check consistency
+        # --------------------------------------------------
+        fifo_groups_all: list[defaultdict[str, list[ResolvedStream]]] = []
+        for env in self.sim_envs:
+            groups: defaultdict[str, list[ResolvedStream]] = defaultdict(list)
+            for fifo in env.fifos:
+                groups[fifo.get_display_name()].append(fifo)
+            fifo_groups_all.append(groups)
+
+        base_fifo_groups = fifo_groups_all[0]
+
+        # Check that group names and membership are consistent across envs
+        for groups in fifo_groups_all[1:]:
+            if sorted(groups.keys()) != sorted(base_fifo_groups.keys()):
+                raise ValueError(
+                    "FIFO group keys do not match across all simulation environments."
+                )
+            for key in groups.keys():
+                base_fifo_ids = sorted([fifo.id for fifo in base_fifo_groups[key]])
+                current_fifo_ids = sorted([fifo.id for fifo in groups[key]])
+                if base_fifo_ids != current_fifo_ids:
+                    raise ValueError(
+                        f"FIFO IDs for group {key} do not match across all sim envs."
+                    )
+
+        # Use first env's grouping as canonical
+        self.fifo_groups: dict[str, list[ResolvedStream]] = base_fifo_groups
+        self.fifo_group_names: list[str] = list(self.fifo_groups.keys())
+
+        # Map group -> list of FIFO IDs
+        self.fifo_ids_groups: dict[str, list[int]] = {}
+        for group_name, fifos in self.fifo_groups.items():
+            self.fifo_ids_groups[group_name] = [fifo.id for fifo in fifos]
+
+        # --------------------------------------------------
+        # 2. Build a unified discrete design space per group
+        #    (union of depths across all envs)
+        # --------------------------------------------------
+        self.grouped_fifos_dse_space: dict[str, list[int]] = {}
+        for group_name in self.fifo_group_names:
+            depths_union: set[int] = set()
+            # same canonical group membership for all envs
+            fifos = self.fifo_groups[group_name]
+            fifo_ids = [fifo.id for fifo in fifos]
+            fifo_width = fifos[0].width
+
+            for env in self.sim_envs:
+                try:
+                    ds = env.trace_base.compiled.get_fifo_design_space(
+                        fifo_ids, fifo_width
+                    )
+                    if ds == [2]:
+                        ds = [2, 64 * fifo_width]
+                except Exception:
+                    ds = [2, 64 * fifo_width]
+
+                depths_union.update(ds)
+
+            self.grouped_fifos_dse_space[group_name] = sorted(depths_union)
+            print(
+                f"[MultiGroupedSA] Group '{group_name}' unified design space: "
+                f"{self.grouped_fifos_dse_space[group_name]}"
+            )
+
+        # Bounds over indices in each group's discrete design space
+        self.fifo_group_bounds: list[tuple[int, int]] = []
+        for group_name in self.fifo_group_names:
+            bounds = (0, len(self.grouped_fifos_dse_space[group_name]) - 1)
+            self.fifo_group_bounds.append(bounds)
+
+    def solve(self) -> MultiEvalResults:
+        thread_pool = ThreadPool(processes=self.n_jobs_over_envs)
+
+        # One list of EvalResults per env
+        results_all_envs: MultiEvalResults = [[] for _ in self.sim_envs]
+
+        for idx in range(self.n_scaling_factors):
+            scaling_factor_latency = self.dual_objective_scaling_factors[idx, 0]
+            scaling_factor_bram = self.dual_objective_scaling_factors[idx, 1]
+
+            def objective_function(x: np.ndarray) -> float:
+                # x are continuous indices; discretize
+                x = round(x, round_type=self.round_type).astype(int)
+
+                # Build config: shared group depth across all envs
+                sample: dict[int, int] = {}
+                for group_name, x_val in zip(self.fifo_group_names, x):
+                    # Clamp defensively
+                    ds = self.grouped_fifos_dse_space[group_name]
+                    x_idx = max(0, min(x_val, len(ds) - 1))
+                    selected_fifo_size = ds[x_idx]
+                    for fifo_id in self.fifo_ids_groups[group_name]:
+                        sample[fifo_id] = selected_fifo_size
+
+                # Evaluate this sample across all envs
+                per_env_results = eval_solution_single_over_envs(
+                    thread_pool, self.sim_envs, sample
+                )
+
+                # Log all EvalResults
+                for env_idx, res in enumerate(per_env_results):
+                    results_all_envs[env_idx].append(res)
+
+                # If ANY env deadlocks, solution is invalid
+                if any(res.deadlock for res in per_env_results):
+                    return np.inf
+
+                latencies: list[float] = []
+                brams: list[int] = []
+                for res in per_env_results:
+                    if res.latency is None or res.bram_usage_total is None:
+                        return np.inf
+                    latencies.append(res.latency)
+                    brams.append(res.bram_usage_total)
+                brams_float = [float(b) for b in brams]
+
+                agg_latency = self.fn_agg_latency(latencies)
+                agg_bram = self.fn_agg_bram(brams_float)
+
+                return (
+                    scaling_factor_latency * agg_latency
+                    + scaling_factor_bram * agg_bram
+                )
+
+            bounds = Bounds(
+                lb=[lower for (lower, _upper) in self.fifo_group_bounds],  # type: ignore
+                ub=[upper for (_lower, upper) in self.fifo_group_bounds],  # type: ignore
+            )
+
+            x0 = None
+            if self.init_with_largest:
+                x0 = np.array(
+                    [
+                        len(self.grouped_fifos_dse_space[group_name]) - 1
+                        for group_name in self.fifo_group_names
+                    ]
+                )
+
+            _result: OptimizeResult = dual_annealing(
+                objective_function,
+                bounds=bounds,
+                maxfun=self.maxfun,
+                no_local_search=True,
+                rng=7,
+                x0=x0,
+            )
+
+        thread_pool.close()
+        thread_pool.join()
+
+        # Return all evaluations per env (same style as MultiDiscreteSimulatedAnnealingOptimizer)
+        return results_all_envs
+
+
+class HeuristicOptimizer(FIFOOptimizer):
+    level_sets = [0.01, 0.05, 0.1, 0.2, 0.5, 1.0]
+
+    def solve(self) -> list[EvalResult]:
+        all_evals = []
+        for level in self.level_sets:
+            print(f"Running heuristic optimization for level: {level}...")
+
+            base_depths = {}
+            for fifo, fifo_io in self.sim_env.simulation_base.fifo_io.items():
+                fifo_id = fifo.id
+                base_depths[fifo_id] = max(fifo_io.get_observed_depth(), 2)
+
+            eval_results = self.sim_env.eval_solution_single(base_depths)
+            all_evals.append(eval_results)
+            assert not eval_results.deadlock
+
+            base_latency = eval_results.latency
+            base_bram_usage_total = eval_results.bram_usage_total
+
+            assert base_latency is not None
+            assert base_bram_usage_total is not None
+
+            fifo_ids_sorted_by_depth = sorted(
+                base_depths.keys(), key=lambda fifo_id: base_depths[fifo_id]
+            )
+
+            fifo_ids_larger_than_two = [
+                fifo_id
+                for fifo_id in fifo_ids_sorted_by_depth
+                if base_depths[fifo_id] > 2
+            ]
+
+            working_set_of_depths = deepcopy(base_depths)
+
+            for fifo_id in fifo_ids_larger_than_two:
+                new_sample = deepcopy(working_set_of_depths)
+                new_sample[fifo_id] = 2
+                eval_results_case = self.sim_env.eval_solution_single(new_sample)
+                all_evals.append(eval_results_case)
+                if eval_results_case.deadlock:
+                    continue
+                assert eval_results_case.latency is not None
+                if eval_results_case.latency > base_latency * 1.01:
+                    continue
+
+                working_set_of_depths[fifo_id] = 2
+
+            eval_results_final = self.sim_env.eval_solution_single(
+                working_set_of_depths
+            )
+            all_evals.append(eval_results_final)
+            assert not eval_results_final.deadlock
+
+        return all_evals
+
+
+class MultiHeuristicOptimizer(MultiFIFOOptimizer):
+    level_sets = [0.01, 0.05, 0.1, 0.2, 0.5, 1.0]
+
+    def _get_fifo_io_by_id(self, env: LSEnv, fifo_id: int):
+        # Correct: match FIFO ID inside fifo_io dict, which is keyed by real Fifo objects
+        for fifo_obj, fifo_io in env.simulation_base.fifo_io.items():
+            if fifo_obj.id == fifo_id:
+                return fifo_obj, fifo_io
+        raise KeyError(f"Fifo id {fifo_id} not found in simulation_base.fifo_io")
+
+    def solve(self) -> MultiEvalResults:
+        thread_pool = ThreadPool(processes=self.n_jobs_over_envs)
+
+        all_same_fifos(self.sim_envs, throw_error=True)
+
+        fifo_ids = [fifo.id for fifo in self.sim_envs[0].fifos]
+        results_all_envs: MultiEvalResults = [[] for _ in self.sim_envs]
+
+        for level in self.level_sets:
+            print(f"[MultiHeuristic] Running heuristic level={level}")
+
+            # -----------------------------------------------
+            # 1. Aggregate observed depths across ALL envs
+            # -----------------------------------------------
+            aggregated_observed_depth: dict[int, int] = {}
+
+            for fifo_id in fifo_ids:
+                max_depth = 0
+                for env in self.sim_envs:
+                    fifo_obj, fifo_io = self._get_fifo_io_by_id(env, fifo_id)
+                    observed = fifo_io.get_observed_depth()
+                    max_depth = max(max_depth, observed)
+
+                aggregated_observed_depth[fifo_id] = max(max_depth, 2)
+
+            # -----------------------------------------------
+            # 2. Evaluate baseline across all envs
+            # -----------------------------------------------
+            baseline_results = []
+            deadlock = False
+            # for env_idx, env in enumerate(self.sim_envs):
+            #     r = env.eval_solution_single(aggregated_observed_depth)
+            #     results_all_envs[env_idx].append(r)
+            #     baseline_results.append(r)
+            #     if r.deadlock:
+            #         deadlock = True
+
+            baseline_results = eval_solution_single_over_envs(
+                thread_pool, self.sim_envs, aggregated_observed_depth
+            )
+            for env_idx, r in enumerate(baseline_results):
+                results_all_envs[env_idx].append(r)
+                if r.deadlock:
+                    deadlock = True
+
+            if deadlock:
+                print("[MultiHeuristic] Baseline deadlocked; skipping level.")
+                continue
+
+            for r in baseline_results:
+                assert not r.deadlock
+                assert r.latency is not None
+
+            latencies = [r.latency for r in baseline_results if r.latency is not None]
+            # base_latency = max(latencies)
+            base_latency = self.fn_agg_latency(latencies)
+
+            # -----------------------------------------------
+            # 3. Sort FIFOs by baseline depth
+            # -----------------------------------------------
+            fifo_ids_sorted = sorted(
+                fifo_ids, key=lambda fid: aggregated_observed_depth[fid]
+            )
+
+            fifo_reduce_list = [
+                fid for fid in fifo_ids_sorted if aggregated_observed_depth[fid] > 2
+            ]
+
+            working_depths = deepcopy(aggregated_observed_depth)
+
+            # -----------------------------------------------
+            # 4. Attempt depth reductions
+            # -----------------------------------------------
+            for fid in fifo_reduce_list:
+                trial = deepcopy(working_depths)
+                trial[fid] = 2
+
+                per_env_results = []
+                deadlock = False
+                # for env_idx, env in enumerate(self.sim_envs):
+                #     r = env.eval_solution_single(trial)
+                #     results_all_envs[env_idx].append(r)
+                #     per_env_results.append(r)
+                #     if r.deadlock:
+                #         deadlock = True
+                per_env_results = eval_solution_single_over_envs(
+                    thread_pool, self.sim_envs, trial
+                )
+                for env_idx, r in enumerate(per_env_results):
+                    results_all_envs[env_idx].append(r)
+                    if r.deadlock:
+                        deadlock = True
+
+                if deadlock:
+                    continue
+
+                for r in per_env_results:
+                    assert not r.deadlock
+                    assert r.latency is not None
+
+                latencies = [
+                    r.latency for r in per_env_results if r.latency is not None
+                ]
+                # trial_latency = max(latencies)
+                trial_latency = self.fn_agg_latency(latencies)
+
+                if trial_latency > base_latency * (1 + level):
+                    continue
+
+                working_depths[fid] = 2
+
+            # -----------------------------------------------
+            # 5. Final evaluation
+            # -----------------------------------------------
+            # for env_idx, env in enumerate(self.sim_envs):
+            #     r = env.eval_solution_single(working_depths)
+            #     results_all_envs[env_idx].append(r)
+            final_results = eval_solution_single_over_envs(
+                thread_pool, self.sim_envs, working_depths
+            )
+            for env_idx, r in enumerate(final_results):
+                results_all_envs[env_idx].append(r)
+
+        thread_pool.close()
+        thread_pool.join()
+
+        return results_all_envs
+
+
+T_FIFOOptimizer = Union[
+    RandomSearchOptimizer,
+    GroupRandomSearchOptimizer,
+    HeuristicOptimizer,
+    DiscreteSimulatedAnnealingOptimizer,
+    GroupedDiscreteSimulatedAnnealingOptimizer,
+]
+
+T_MultiFIFOOptimizer = Union[
+    MultiRandomSearchOptimizer,
+    MultiHeuristicOptimizer,
+    MultiDiscreteSimulatedAnnealingOptimizer,
+    MultiGroupedDiscreteSimulatedAnnealingOptimizer,
+]
+
+
+############ Other Experimental Optimizers ############
 
 
 class GroupExhaustiveOptimizer(FIFOOptimizer):
@@ -418,6 +1243,90 @@ class GroupExhaustiveOptimizer(FIFOOptimizer):
         results = self.sim_env.eval_solution_parallel(samples)
 
         return results
+
+
+class SimulatedAnnealingOptimizer(FIFOOptimizer):
+    def __init__(
+        self,
+        sim_env: LSEnv,
+        maxfun: int = 100,
+        round_type: ROUND_TYPE = ROUND_TYPE.RINT,
+        init_pool: list[EvalResult] | None = None,
+    ):
+        super().__init__(sim_env)
+        self.maxfun = maxfun
+        self.round_type = round_type
+        self.init_pool = init_pool
+
+        self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
+        self.n_scaling_factors = 8
+        self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
+            self.n_scaling_factors
+        )
+
+    def solve(self) -> list[EvalResult]:
+        results = []
+
+        results_all = []
+
+        sampled_x0: list[list[int]] | list[None] = []
+        if self.init_pool is not None:
+            sampled_eval_results = random.choices(
+                self.init_pool, k=self.n_scaling_factors
+            )
+            sampled_configs = [r.fifo_sizes for r in sampled_eval_results]
+            sampled_x0 = []
+            for sample_config in sampled_configs:
+                x0 = [sample_config[fifo_id] for fifo_id in self.fifo_ids]
+                sampled_x0.append(x0)  # type: ignore
+        else:
+            sampled_x0 = [None for _ in range(self.n_scaling_factors)]
+
+        for idx in range(self.n_scaling_factors):
+            scaling_factor_latency = self.dual_objective_scaling_factors[idx, 0]
+            scaling_factor_bram = self.dual_objective_scaling_factors[idx, 1]
+
+            def objective_function(x: np.ndarray) -> float:
+                x = round(x, self.round_type).astype(int)
+                sample = dict(zip(self.fifo_ids, x))  # Directly construct dictionary
+
+                y = self.sim_env.eval_solution_single(sample)
+                results_all.append(y)
+
+                if y.deadlock:
+                    return np.inf
+
+                return (
+                    scaling_factor_latency * y.latency
+                    + scaling_factor_bram * y.bram_usage_total
+                )
+
+            bounds = Bounds(
+                lb=np.full_like((self.sim_env.num_fifos,), self.sim_env.min_fifo_size),  # type: ignore
+                ub=np.array(
+                    [self.sim_env.fifo_sizes_base[fifo_id] for fifo_id in self.fifo_ids]  # type: ignore
+                ),
+            )
+
+            result = dual_annealing(
+                objective_function,
+                bounds=bounds,
+                maxfun=self.maxfun,
+                no_local_search=True,
+                rng=7,
+                x0=sampled_x0[idx],  # type: ignore
+            )
+            x_rounded = round(result.x, self.round_type)
+            x_python = x_rounded.tolist()
+            x_python_int = [int(x) for x in x_python]
+
+            sol_sample = {
+                fifo_id: size for fifo_id, size in zip(self.fifo_ids, x_python_int)
+            }
+            sol_eval_results = self.sim_env.eval_solution_single(sol_sample)
+            results.append(sol_eval_results)
+
+        return results_all
 
 
 class FIFOOptProblemInt(Problem):
@@ -551,467 +1460,6 @@ class BayesianOptimizer(FIFOOptimizer):
         raise NotImplementedError
 
 
-class SimulatedAnnealingOptimizer(FIFOOptimizer):
-    def __init__(
-        self,
-        sim_env: LSEnv,
-        maxfun: int = 100,
-        round_type: ROUND_TYPE = ROUND_TYPE.RINT,
-        init_pool: list[EvalResult] | None = None,
-    ):
-        super().__init__(sim_env)
-        self.maxfun = maxfun
-        self.round_type = round_type
-        self.init_pool = init_pool
-
-        self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
-        self.n_scaling_factors = 8
-        self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
-            self.n_scaling_factors
-        )
-
-    def solve(self) -> list[EvalResult]:
-        results = []
-
-        results_all = []
-
-        sampled_x0: list[list[int]] | list[None] = []
-        if self.init_pool is not None:
-            sampled_eval_results = random.choices(
-                self.init_pool, k=self.n_scaling_factors
-            )
-            sampled_configs = [r.fifo_sizes for r in sampled_eval_results]
-            sampled_x0 = []
-            for sample_config in sampled_configs:
-                x0 = [sample_config[fifo_id] for fifo_id in self.fifo_ids]
-                sampled_x0.append(x0)  # type: ignore
-        else:
-            sampled_x0 = [None for _ in range(self.n_scaling_factors)]
-
-        for idx in range(self.n_scaling_factors):
-            scaling_factor_latency = self.dual_objective_scaling_factors[idx, 0]
-            scaling_factor_bram = self.dual_objective_scaling_factors[idx, 1]
-
-            def objective_function(x: np.ndarray) -> float:
-                x = round(x, self.round_type).astype(int)
-                sample = dict(zip(self.fifo_ids, x))  # Directly construct dictionary
-
-                y = self.sim_env.eval_solution_single(sample)
-                results_all.append(y)
-
-                if y.deadlock:
-                    return np.inf
-
-                return (
-                    scaling_factor_latency * y.latency
-                    + scaling_factor_bram * y.bram_usage_total
-                )
-
-            bounds = Bounds(
-                lb=np.full_like((self.sim_env.num_fifos,), self.sim_env.min_fifo_size),  # type: ignore
-                ub=np.array(
-                    [self.sim_env.fifo_sizes_base[fifo_id] for fifo_id in self.fifo_ids]  # type: ignore
-                ),
-            )
-
-            result = dual_annealing(
-                objective_function,
-                bounds=bounds,
-                maxfun=self.maxfun,
-                no_local_search=True,
-                rng=7,
-                x0=sampled_x0[idx],  # type: ignore
-            )
-            x_rounded = round(result.x, self.round_type)
-            x_python = x_rounded.tolist()
-            x_python_int = [int(x) for x in x_python]
-
-            sol_sample = {
-                fifo_id: size for fifo_id, size in zip(self.fifo_ids, x_python_int)
-            }
-            sol_eval_results = self.sim_env.eval_solution_single(sol_sample)
-            results.append(sol_eval_results)
-
-        return results_all
-
-
-class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
-    def __init__(
-        self,
-        sim_env: LSEnv,
-        maxfun: int = 100,
-        n_scaling_factors: int = 8,
-        round_type: ROUND_TYPE = ROUND_TYPE.RINT,
-        init_with_largest: bool = False,
-    ):
-        super().__init__(sim_env)
-        self.maxfun = maxfun
-        self.round_type = round_type
-        self.init_with_largest = init_with_largest
-
-        self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
-        self.n_scaling_factors = n_scaling_factors
-        self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
-            self.n_scaling_factors
-        )
-
-        self.fifos_dse_space = {}
-
-        for fifo in self.sim_env.fifos:
-            fifo_id = fifo.id
-            try:
-                fifo_depths = self.sim_env.trace_base.compiled.get_fifo_design_space(
-                    [fifo_id], fifo.width
-                )
-                if fifo_depths == [2]:
-                    fifo_depths = [2, 64 * fifo.width]
-                print(f"FIFO {fifo_id} design space: {fifo_depths}")
-            except Exception:
-                fifo_depths = [2, 64 * fifo.width]
-            self.fifos_dse_space[fifo_id] = fifo_depths
-
-        self.fifos_dse_space_bounds = []
-        for fifo_id in self.fifo_ids:
-            bounds = (0, len(self.fifos_dse_space[fifo_id]) - 1)
-            self.fifos_dse_space_bounds.append(bounds)
-
-    def solve(self) -> list[EvalResult]:
-        results = []
-
-        results_all = []
-
-        for idx in range(self.n_scaling_factors):
-            scaling_factor_latency = self.dual_objective_scaling_factors[idx, 0]
-            scaling_factor_bram = self.dual_objective_scaling_factors[idx, 1]
-
-            def objective_function(x: np.ndarray) -> float:
-                x = round(x, round_type=self.round_type).astype(int)
-                # sample = dict(zip(self.fifo_ids, x))  # Directly construct dictionary
-                sample = {}
-                for fifo_id, x_val in zip(self.fifo_ids, x):
-                    selected_fifo_size = self.fifos_dse_space[fifo_id][x_val]
-                    sample[fifo_id] = selected_fifo_size
-
-                y = self.sim_env.eval_solution_single(sample)
-                results_all.append(y)
-
-                if y.deadlock:
-                    return np.inf
-
-                return (
-                    scaling_factor_latency * y.latency
-                    + scaling_factor_bram * y.bram_usage_total
-                )
-
-            bounds = Bounds(
-                lb=[l for l, u in self.fifos_dse_space_bounds],  # type: ignore
-                ub=[u for l, u in self.fifos_dse_space_bounds],  # type: ignore
-            )
-
-            x0 = None
-            if self.init_with_largest:
-                x0 = np.array(
-                    [
-                        len(self.fifos_dse_space[fifo_id]) - 1
-                        for fifo_id in self.fifo_ids
-                    ]
-                )
-
-            result = dual_annealing(
-                objective_function,
-                bounds=bounds,
-                maxfun=self.maxfun,
-                no_local_search=True,
-                rng=7,
-                x0=x0,
-            )
-            x_rounded = round(result.x, self.round_type)
-            x_python = x_rounded.tolist()
-            x_python_int = [int(x) for x in x_python]
-
-            sol_sample = {
-                fifo_id: size for fifo_id, size in zip(self.fifo_ids, x_python_int)
-            }
-            sol_eval_results = self.sim_env.eval_solution_single(sol_sample)
-            results.append(sol_eval_results)
-
-        return results_all
-
-
-class MultiDiscreteSimulatedAnnealingOptimizer(MultiFIFOOptimizer):
-    def __init__(
-        self,
-        sim_envs: list[LSEnv],
-        maxfun: int = 100,
-        n_scaling_factors: int = 8,
-        round_type: ROUND_TYPE = ROUND_TYPE.RINT,
-        init_with_largest: bool = False,
-        n_jobs_over_envs: int = 1,
-    ):
-        super().__init__(sim_envs)
-        self.sim_envs = sim_envs
-        self.maxfun = maxfun
-        self.round_type = round_type
-        self.init_with_largest = init_with_largest
-
-        self.n_jobs_over_envs = n_jobs_over_envs
-
-        # Ensure all FIFO sets are identical across envs
-        all_same_fifos(self.sim_envs, throw_error=True)
-
-        # Use FIFO ids from the first env as the canonical ordering
-        self.fifo_ids = [fifo.id for fifo in self.sim_envs[0].fifos]
-
-        self.n_scaling_factors = n_scaling_factors
-        self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
-            self.n_scaling_factors
-        )
-
-        # Build a unified discrete design space for each FIFO id
-        # by taking the union of all depths across all envs
-        self.fifos_dse_space: dict[int, list[int]] = {}
-        for fifo in self.sim_envs[0].fifos:
-            fifo_id = fifo.id
-            fifo_width = fifo.width
-
-            depths_union: set[int] = set()
-            for sim_env in self.sim_envs:
-                try:
-                    ds = sim_env.trace_base.compiled.get_fifo_design_space(
-                        [fifo_id], fifo_width
-                    )
-                    if ds == [2]:
-                        ds = [2, 64 * fifo_width]
-                except Exception:
-                    ds = [2, 64 * fifo_width]
-                depths_union.update(ds)
-
-            self.fifos_dse_space[fifo_id] = sorted(depths_union)
-            print(
-                f"[MultiDiscreteSA] FIFO {fifo_id} unified design space: "
-                f"{self.fifos_dse_space[fifo_id]}"
-            )
-
-        # Bounds are over indices into each fifo's discrete design space
-        self.fifos_dse_space_bounds: list[tuple[int, int]] = []
-        for fifo_id in self.fifo_ids:
-            bounds = (0, len(self.fifos_dse_space[fifo_id]) - 1)
-            self.fifos_dse_space_bounds.append(bounds)
-
-    def solve(self) -> MultiEvalResults:
-        # One list of EvalResults per env
-        results_all_envs: MultiEvalResults = [[] for _ in self.sim_envs]
-
-        for idx in range(self.n_scaling_factors):
-            scaling_factor_latency = self.dual_objective_scaling_factors[idx, 0]
-            scaling_factor_bram = self.dual_objective_scaling_factors[idx, 1]
-
-            def objective_function(x: np.ndarray) -> float:
-                # x are continuous indices; round to nearest integer and clamp
-                x = round(x, round_type=self.round_type).astype(int)
-
-                # Build FIFO size sample by mapping index -> actual depth
-                sample: dict[int, int] = {}
-                for fifo_id, x_val in zip(self.fifo_ids, x):
-                    # Defensive clamp (should already be within bounds due to Bounds)
-                    x_idx = max(0, min(x_val, len(self.fifos_dse_space[fifo_id]) - 1))
-                    selected_fifo_size = self.fifos_dse_space[fifo_id][x_idx]
-                    sample[fifo_id] = selected_fifo_size
-
-                # Evaluate this sample on all sim envs
-                # per_env_results: list[EvalResult] = []
-                # for env in self.sim_envs:
-                #     res = env.eval_solution_single(sample)
-                #     per_env_results.append(res)
-
-                per_env_results = eval_solution_single_over_envs(
-                    self.sim_envs, sample, n_jobs=self.n_jobs_over_envs
-                )
-
-                # Log results per env
-                for env_idx, res in enumerate(per_env_results):
-                    results_all_envs[env_idx].append(res)
-
-                # If ANY env deadlocks, solution is invalid
-                if any(res.deadlock for res in per_env_results):
-                    return np.inf
-
-                # Aggregate latency and resource usage as max across envs
-                latencies = []
-                brams = []
-                for res in per_env_results:
-                    # If any metric is missing, treat as invalid
-                    if res.latency is None or res.bram_usage_total is None:
-                        return np.inf
-                    latencies.append(res.latency)
-                    brams.append(res.bram_usage_total)
-
-                max_latency = max(latencies)
-                max_bram = max(brams)
-
-                return (
-                    scaling_factor_latency * max_latency
-                    + scaling_factor_bram * max_bram
-                )
-
-            bounds = Bounds(
-                lb=[l for (l, _u) in self.fifos_dse_space_bounds],  # type: ignore
-                ub=[u for (_l, u) in self.fifos_dse_space_bounds],  # type: ignore
-            )
-
-            x0 = None
-            if self.init_with_largest:
-                # Initialize with the largest discrete option index for each FIFO
-                x0 = np.array(
-                    [
-                        len(self.fifos_dse_space[fifo_id]) - 1
-                        for fifo_id in self.fifo_ids
-                    ]
-                )
-
-            # Run dual annealing over the discrete index space
-            _result: OptimizeResult = dual_annealing(
-                objective_function,
-                bounds=bounds,
-                maxfun=self.maxfun,
-                no_local_search=True,
-                rng=7,
-                x0=x0,
-            )
-
-        # We return all evaluations per env (consistent with MultiRandomSearch style)
-        return results_all_envs
-
-
-class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
-    def __init__(
-        self,
-        sim_env: LSEnv,
-        maxfun: int = 100,
-        n_scaling_factors: int = 8,
-        round_type: ROUND_TYPE = ROUND_TYPE.RINT,
-        init_with_largest: bool = False,
-    ):
-        super().__init__(sim_env)
-        self.maxfun = maxfun
-        self.round_type = round_type
-        self.init_with_largest = init_with_largest
-
-        self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
-        self.n_scaling_factors = n_scaling_factors
-        self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
-            self.n_scaling_factors
-        )
-
-        # self.fifos_dse_space = {}
-        # for fifo in self.sim_env.fifos:
-        #     fifo_id = fifo.id
-        #     fifo_depths = self.sim_env.trace_base.compiled.get_fifo_design_space(
-        #         [fifo_id], fifo.width
-        #     )
-        #     self.fifos_dse_space[fifo_id] = fifo_depths
-
-        # self.fifos_dse_space_bounds = []
-        # for fifo_id in self.fifo_ids:
-        #     bounds = (0, len(self.fifos_dse_space[fifo_id]) - 1)
-        #     self.fifos_dse_space_bounds.append(bounds)
-
-        self.fifo_groups: dict[str, list[ResolvedStream]] = defaultdict(list)
-        for fifo in self.sim_env.fifos:
-            self.fifo_groups[fifo.get_display_name()].append(fifo)
-
-        self.fifo_group_names = list(self.fifo_groups.keys())
-
-        self.fifo_ids_groups = defaultdict(list)
-        for k, v in self.fifo_groups.items():
-            for fifo in v:
-                self.fifo_ids_groups[k].append(fifo.id)
-
-        self.grouped_fifos_dse_space = {}
-        for fifo_group, fifos in self.fifo_groups.items():
-            # self.grouped_fifos_dse_space[fifo_group] = (
-            #     self.sim_env.trace_base.compiled.get_fifo_design_space(
-            #         [fifo.id for fifo in fifos], fifos[0].width
-            #     )
-            # )
-            ds = self.sim_env.trace_base.compiled.get_fifo_design_space(
-                [fifo.id for fifo in fifos], fifos[0].width
-            )
-            if ds == [2]:
-                ds: list[int] = [2, 64 * fifos[0].width]  # type: ignore
-            self.grouped_fifos_dse_space[fifo_group] = ds
-
-        self.fifo_group_bounds: list[tuple[int, int]] = []
-        for fifo_group in self.fifo_group_names:
-            bounds = (0, len(self.grouped_fifos_dse_space[fifo_group]) - 1)
-            self.fifo_group_bounds.append(bounds)
-
-        # print(self.fifo_group_bounds)
-
-    def solve(self) -> list[EvalResult]:
-        results = []
-
-        results_all = []
-
-        for idx in range(self.n_scaling_factors):
-            scaling_factor_latency = self.dual_objective_scaling_factors[idx, 0]
-            scaling_factor_bram = self.dual_objective_scaling_factors[idx, 1]
-
-            def objective_function(x: np.ndarray) -> float:
-                x = round(x, round_type=self.round_type).astype(int)
-
-                sample = {}
-                for fifo_group, x_val in zip(self.fifo_group_names, x):
-                    selected_fifo_size = self.grouped_fifos_dse_space[fifo_group][x_val]
-                    for fifo_id in self.fifo_ids_groups[fifo_group]:
-                        sample[fifo_id] = selected_fifo_size
-
-                y = self.sim_env.eval_solution_single(sample)
-                results_all.append(y)
-
-                if y.deadlock:
-                    return np.inf
-
-                return (
-                    scaling_factor_latency * y.latency
-                    + scaling_factor_bram * y.bram_usage_total
-                )
-
-            bounds = Bounds(
-                lb=[l for l, u in self.fifo_group_bounds],  # type: ignore
-                ub=[u for l, u in self.fifo_group_bounds],  # type: ignore
-            )
-
-            x0 = None
-            if self.init_with_largest:
-                x0 = np.array(
-                    [
-                        len(self.grouped_fifos_dse_space[fifo_group]) - 1
-                        for fifo_group in self.fifo_group_names
-                    ]
-                )
-
-            result: OptimizeResult = dual_annealing(
-                objective_function,
-                bounds=bounds,
-                maxfun=self.maxfun,
-                no_local_search=True,
-                rng=7,
-                x0=x0,
-            )
-            x_rounded = round(result.x, self.round_type)
-            x_python = x_rounded.tolist()
-            x_python_int = [int(x) for x in x_python]
-
-            sol_sample = {
-                fifo_id: size for fifo_id, size in zip(self.fifo_ids, x_python_int)
-            }
-            sol_eval_results = self.sim_env.eval_solution_single(sol_sample)
-            results.append(sol_eval_results)
-
-        return results_all
-
-
 class GroupRandomInitializedSimulatedAnnealingOptimizer(FIFOOptimizer):
     def __init__(
         self,
@@ -1060,202 +1508,3 @@ class GroupRandomInitializedSimulatedAnnealingOptimizer(FIFOOptimizer):
             results_simulated_annealing = self.opt_simulated_annealing.solve()
             all_results.extend(results_simulated_annealing)
         return all_results
-
-
-class HeuristicOptimizer(FIFOOptimizer):
-    level_sets = [0.01, 0.05, 0.1, 0.2, 0.5, 1.0]
-
-    def solve(self) -> list[EvalResult]:
-        all_evals = []
-        for level in self.level_sets:
-            print(f"Running heuristic optimization for level: {level}...")
-
-            base_depths = {}
-            for fifo, fifo_io in self.sim_env.simulation_base.fifo_io.items():
-                fifo_id = fifo.id
-                base_depths[fifo_id] = max(fifo_io.get_observed_depth(), 2)
-
-            eval_results = self.sim_env.eval_solution_single(base_depths)
-            all_evals.append(eval_results)
-            assert not eval_results.deadlock
-
-            base_latency = eval_results.latency
-            base_bram_usage_total = eval_results.bram_usage_total
-
-            assert base_latency is not None
-            assert base_bram_usage_total is not None
-
-            fifo_ids_sorted_by_depth = sorted(
-                base_depths.keys(), key=lambda fifo_id: base_depths[fifo_id]
-            )
-
-            fifo_ids_larger_than_two = [
-                fifo_id
-                for fifo_id in fifo_ids_sorted_by_depth
-                if base_depths[fifo_id] > 2
-            ]
-
-            working_set_of_depths = deepcopy(base_depths)
-
-            for fifo_id in fifo_ids_larger_than_two:
-                new_sample = deepcopy(working_set_of_depths)
-                new_sample[fifo_id] = 2
-                eval_results_case = self.sim_env.eval_solution_single(new_sample)
-                all_evals.append(eval_results_case)
-                if eval_results_case.deadlock:
-                    continue
-                assert eval_results_case.latency is not None
-                if eval_results_case.latency > base_latency * 1.01:
-                    continue
-
-                working_set_of_depths[fifo_id] = 2
-
-            eval_results_final = self.sim_env.eval_solution_single(
-                working_set_of_depths
-            )
-            all_evals.append(eval_results_final)
-            assert not eval_results_final.deadlock
-
-        return all_evals
-
-
-class MultiHeuristicOptimizer(MultiFIFOOptimizer):
-    level_sets = [0.01, 0.05, 0.1, 0.2, 0.5, 1.0]
-
-    def _get_fifo_io_by_id(self, env: LSEnv, fifo_id: int):
-        # Correct: match FIFO ID inside fifo_io dict, which is keyed by real Fifo objects
-        for fifo_obj, fifo_io in env.simulation_base.fifo_io.items():
-            if fifo_obj.id == fifo_id:
-                return fifo_obj, fifo_io
-        raise KeyError(f"Fifo id {fifo_id} not found in simulation_base.fifo_io")
-
-    def solve(self) -> MultiEvalResults:
-        all_same_fifos(self.sim_envs, throw_error=True)
-
-        fifo_ids = [fifo.id for fifo in self.sim_envs[0].fifos]
-        results_all_envs: MultiEvalResults = [[] for _ in self.sim_envs]
-
-        for level in self.level_sets:
-            print(f"[MultiHeuristic] Running heuristic level={level}")
-
-            # -----------------------------------------------
-            # 1. Aggregate observed depths across ALL envs
-            # -----------------------------------------------
-            aggregated_observed_depth: dict[int, int] = {}
-
-            for fifo_id in fifo_ids:
-                max_depth = 0
-                for env in self.sim_envs:
-                    fifo_obj, fifo_io = self._get_fifo_io_by_id(env, fifo_id)
-                    observed = fifo_io.get_observed_depth()
-                    max_depth = max(max_depth, observed)
-
-                aggregated_observed_depth[fifo_id] = max(max_depth, 2)
-
-            # -----------------------------------------------
-            # 2. Evaluate baseline across all envs
-            # -----------------------------------------------
-            baseline_results = []
-            deadlock = False
-            # for env_idx, env in enumerate(self.sim_envs):
-            #     r = env.eval_solution_single(aggregated_observed_depth)
-            #     results_all_envs[env_idx].append(r)
-            #     baseline_results.append(r)
-            #     if r.deadlock:
-            #         deadlock = True
-
-            baseline_results = eval_solution_single_over_envs(
-                self.sim_envs, aggregated_observed_depth, n_jobs=self.n_jobs_over_envs
-            )
-            for env_idx, r in enumerate(baseline_results):
-                results_all_envs[env_idx].append(r)
-                if r.deadlock:
-                    deadlock = True
-
-            if deadlock:
-                print("[MultiHeuristic] Baseline deadlocked; skipping level.")
-                continue
-
-            base_latency = max(r.latency for r in baseline_results)
-
-            # -----------------------------------------------
-            # 3. Sort FIFOs by baseline depth
-            # -----------------------------------------------
-            fifo_ids_sorted = sorted(
-                fifo_ids, key=lambda fid: aggregated_observed_depth[fid]
-            )
-
-            fifo_reduce_list = [
-                fid for fid in fifo_ids_sorted if aggregated_observed_depth[fid] > 2
-            ]
-
-            working_depths = deepcopy(aggregated_observed_depth)
-
-            # -----------------------------------------------
-            # 4. Attempt depth reductions
-            # -----------------------------------------------
-            for fid in fifo_reduce_list:
-                trial = deepcopy(working_depths)
-                trial[fid] = 2
-
-                per_env_results = []
-                deadlock = False
-                # for env_idx, env in enumerate(self.sim_envs):
-                #     r = env.eval_solution_single(trial)
-                #     results_all_envs[env_idx].append(r)
-                #     per_env_results.append(r)
-                #     if r.deadlock:
-                #         deadlock = True
-                per_env_results = eval_solution_single_over_envs(
-                    self.sim_envs, trial, n_jobs=self.n_jobs_over_envs
-                )
-                for env_idx, r in enumerate(per_env_results):
-                    results_all_envs[env_idx].append(r)
-                    if r.deadlock:
-                        deadlock = True
-
-                if deadlock:
-                    continue
-
-                trial_latency = max(r.latency for r in per_env_results)
-
-                if trial_latency > base_latency * (1 + level):
-                    continue
-
-                working_depths[fid] = 2
-
-            # -----------------------------------------------
-            # 5. Final evaluation
-            # -----------------------------------------------
-            # for env_idx, env in enumerate(self.sim_envs):
-            #     r = env.eval_solution_single(working_depths)
-            #     results_all_envs[env_idx].append(r)
-            final_results = eval_solution_single_over_envs(
-                self.sim_envs, working_depths, n_jobs=self.n_jobs_over_envs
-            )
-            for env_idx, r in enumerate(final_results):
-                results_all_envs[env_idx].append(r)
-
-        return results_all_envs
-
-
-T_FIFOOptimizer = Union[
-    ##### old optimizers (commented out)
-    # GroupExhaustiveOptimizer,
-    # SimulatedAnnealingOptimizer,
-    # GroupRandomInitializedSimulatedAnnealingOptimizer,
-    #####
-    RandomSearchOptimizer,
-    GroupRandomSearchOptimizer,
-    HeuristicOptimizer,
-    DiscreteSimulatedAnnealingOptimizer,
-    GroupedDiscreteSimulatedAnnealingOptimizer,
-]
-
-T_MultiFIFOOptimizer = Union[
-    MultiRandomSearchOptimizer,
-    MultiHeuristicOptimizer,
-    MultiDiscreteSimulatedAnnealingOptimizer,
-    #### todo
-    # MultiGroupedDiscreteSimulatedAnnealingOptimizer
-]

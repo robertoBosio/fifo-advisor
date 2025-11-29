@@ -1,4 +1,3 @@
-import itertools
 from pathlib import Path
 
 import matplotlib
@@ -7,10 +6,6 @@ import numpy as np
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
-from matplotlib.axes import Axes
-from matplotlib.lines import Line2D
-from matplotlib.patches import Rectangle
 
 DIR_CURRENT = Path(__file__).parent
 
@@ -33,7 +28,7 @@ df_data_all["design_index"] = df_data_all["design"].apply(
 print(df_data_all.head())
 
 
-optmizer_to_keep = "multi_heuristic"
+optmizer_to_keep = "grouped_discrete_simulated_annealing"
 
 df_single = df_data_all[df_data_all["optimizer_name"] == optmizer_to_keep].copy()
 
@@ -43,7 +38,7 @@ good_eval_indices = []
 eval_indices = df_single["eval_index"].unique()
 for eval_index in eval_indices:
     df_eval = df_single[df_single["eval_index"] == eval_index]
-    if all(df_eval["deadlock"] == False):
+    if not df_eval["deadlock"].any():
         print(f"Found eval_index {eval_index} where all designs have no deadlock.")
         good_eval_indices.append(eval_index)
 # i.e. for ALL i in

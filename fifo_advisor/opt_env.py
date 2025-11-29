@@ -6,6 +6,7 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable, TypeVar
 
 import numpy as np
 from lightningsim.model import Solution
@@ -45,7 +46,7 @@ class LSEnv:
 
         try:
             with open(os.path.join(vitis_hls_solution_dir, "trace.pkl"), "rb") as f:
-                self.trace_base = pickle.load(f)
+                self.trace_base: ResolvedTrace = pickle.load(f)
                 print("Loaded trace from pickle file.")
 
         except FileNotFoundError:
@@ -82,7 +83,7 @@ class LSEnv:
 
             sys.setrecursionlimit(10_000)
 
-            self.trace_base: ResolvedTrace = asyncio.run(runner.run())
+            self.trace_base: ResolvedTrace = asyncio.run(runner.run())  # type: ignore
             with open(os.path.join(vitis_hls_solution_dir, "trace.pkl"), "wb") as f:
                 pickle.dump(self.trace_base, f)
                 print("Saved trace to pickle file.")
@@ -180,10 +181,23 @@ class FIFOOptimizer(ABC):
         pass
 
 
+T_agg_list_val = TypeVar("T_agg_list_val", int, float)
+
+T_fn_agg = Callable[[list[T_agg_list_val]], T_agg_list_val]
+
+
 class MultiFIFOOptimizer(ABC):
-    def __init__(self, sim_envs: list[LSEnv], n_jobs_over_envs: int = 1):
+    def __init__(
+        self,
+        sim_envs: list[LSEnv],
+        n_jobs_over_envs: int = 1,
+        fn_agg_latency: T_fn_agg = max,
+        fn_agg_bram: T_fn_agg = max,
+    ):
         self.sim_envs: list[LSEnv] = sim_envs
         self.n_jobs_over_envs = n_jobs_over_envs
+        self.fn_agg_latency = fn_agg_latency
+        self.fn_agg_bram = fn_agg_bram
 
     @abstractmethod
     def solve(self) -> MultiEvalResults:
@@ -222,8 +236,3 @@ def is_pareto_efficient_simple(eval_results: list[EvalResult]) -> list[bool]:
     is_efficient_list = is_efficient.tolist()
     is_efficient_list_bool = [bool(v) for v in is_efficient_list]
     return is_efficient_list_bool
-
-
-def solution_to_config(solution: dict[int, int]) -> list[str]:
-    config = []
-    return config

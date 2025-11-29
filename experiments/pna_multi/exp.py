@@ -1,21 +1,17 @@
-from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
+from statistics import mean
+from typing import Callable, Iterable
 
 import pandas as pd
 
 from fifo_advisor.automation import TestCase
 from fifo_advisor.opt_env import LSEnv, MultiFIFOOptimizer
 from fifo_advisor.solvers import (
-    DiscreteSimulatedAnnealingOptimizer,
-    GroupedDiscreteSimulatedAnnealingOptimizer,
-    GroupRandomSearchOptimizer,
-    HeuristicOptimizer,
-    MultiDiscreteSimulatedAnnealingOptimizer,
+    MultiDiscreteSimulatedAnnealingOptimizer,  # noqa F401
+    MultiGroupedDiscreteSimulatedAnnealingOptimizer,
     MultiGroupRandomSearchOptimizer,
     MultiHeuristicOptimizer,
-    T_FIFOOptimizer,
-    T_MultiFIFOOptimizer,
 )
 
 DIR_CURRENT = Path(__file__).parent
@@ -49,30 +45,41 @@ test_cases = test_cases[:]  # limit to first design for faster testing
 
 N_JOBS_OVER_ENVS = 64
 
-optimizers: dict[str, partial[MultiFIFOOptimizer]] = {
+fn_agg_latency: Callable[[Iterable[float]], float] = mean
+fn_agg_bram: Callable[[Iterable[float]], float] = mean
+
+optimizers: dict[str, Callable[..., MultiFIFOOptimizer]] = {
     "multi_group_random_search": partial(
         MultiGroupRandomSearchOptimizer,
         n_samples=5000,
         n_jobs_over_envs=N_JOBS_OVER_ENVS,
+        fn_agg_latency=fn_agg_latency,
+        fn_agg_bram=fn_agg_bram,
     ),
     "multi_heuristic": partial(
         MultiHeuristicOptimizer,
         n_jobs_over_envs=N_JOBS_OVER_ENVS,
+        fn_agg_latency=fn_agg_latency,
+        fn_agg_bram=fn_agg_bram,
     ),
-    "multi_discrete_simulated_annealing": partial(
-        MultiDiscreteSimulatedAnnealingOptimizer,
-        maxfun=5000 // 4,
-        n_scaling_factors=4,
-        init_with_largest=True,
-        n_jobs_over_envs=N_JOBS_OVER_ENVS,
-    ),
-    # "grouped_discrete_simulated_annealing": partial(
-    #     MultiGroupedDiscreteSimulatedAnnealingOptimizer,
+    # "multi_discrete_simulated_annealing": partial(
+    #     MultiDiscreteSimulatedAnnealingOptimizer,
     #     maxfun=5000 // 4,
     #     n_scaling_factors=4,
     #     init_with_largest=True,
     #     n_jobs_over_envs=N_JOBS_OVER_ENVS,
+    #     fn_agg_latency=fn_agg_latency,
+    #     fn_agg_bram=fn_agg_bram,
     # ),
+    "multi_grouped_discrete_simulated_annealing": partial(
+        MultiGroupedDiscreteSimulatedAnnealingOptimizer,
+        maxfun=5000 // 4,
+        n_scaling_factors=4,
+        init_with_largest=True,
+        n_jobs_over_envs=N_JOBS_OVER_ENVS,
+        fn_agg_latency=fn_agg_latency,
+        fn_agg_bram=fn_agg_bram,
+    ),
 }
 
 
@@ -80,8 +87,6 @@ def run_single_eval(design_cases: list[TestCase], optimizer_name: str):
     print(
         f"Running design cases as single design for multi optimizer\n{design_cases}\nwith optimizer\n{optimizer_name}"
     )
-
-    prj_paths = [design.prj_path.resolve().absolute() for design in design_cases]
 
     sim_envs = [
         LSEnv(
@@ -98,10 +103,7 @@ def run_single_eval(design_cases: list[TestCase], optimizer_name: str):
     try:
         results = optimizer.solve()
     except Exception as e:
-        # print(f"Error in design: {[design.name for design in design_cases]}: {e}")
         raise e
-        print(e)
-        return
 
     data = []
     for design_case, results_case in zip(design_cases, results):
@@ -121,7 +123,7 @@ def run_single_eval(design_cases: list[TestCase], optimizer_name: str):
 combos = [
     (test_cases, "multi_group_random_search"),
     (test_cases, "multi_heuristic"),
-    (test_cases, "multi_discrete_simulated_annealing"),
+    (test_cases, "multi_grouped_discrete_simulated_annealing"),
 ]
 
 # N_JOBS = 1

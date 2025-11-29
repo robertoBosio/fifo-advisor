@@ -5,14 +5,7 @@ description = "FIFOAdvisor is a tool to optimize FIFO sizes in high-level synthe
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
-dependencies = [
-    "numpy",
-    "pandas",
-    "matplotlib",
-    "seaborn",
-    "scipy",
-    "pymoo",
-]
+dependencies = ["numpy", "pandas", "matplotlib", "seaborn", "scipy", "pymoo"]
 
 [build-system]
 requires = ["setuptools"]
@@ -25,7 +18,7 @@ where = ["."]
 fifo-advisor = "fifo_advisor.main:cli"
 
 [project.optional-dependencies]
-dev = [
-    "ruff",
-    "mypy",
-]
+dev = ["ruff", "mypy"]
+
+[tool.mypy]
+ignore_missing_imports = true

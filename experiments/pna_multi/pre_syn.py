@@ -1,27 +1,14 @@
-import itertools
 import json
 import re
 import shutil
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
-from functools import partial
 from pathlib import Path
-from pprint import pp
 from typing import Any
 
-import pandas as pd
 from dotenv import dotenv_values
 from joblib import Parallel, delayed
 
 from fifo_advisor.automation import TestCase
-from fifo_advisor.opt_env import LSEnv, is_pareto_efficient_simple
-from fifo_advisor.solvers import (
-    DiscreteSimulatedAnnealingOptimizer,
-    GroupedDiscreteSimulatedAnnealingOptimizer,
-    GroupRandomSearchOptimizer,
-    HeuristicOptimizer,
-    T_FIFOOptimizer,
-)
 
 DIR_CURRENT = Path(__file__).parent
 
