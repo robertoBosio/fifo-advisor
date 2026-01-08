@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from matplotlib.pylab import pareto
+
 from fifo_advisor.opt_env import (
     EvalResult,
     FIFOOptimizer,
@@ -205,6 +207,17 @@ def fifo_config_to_tcl_config(fifo_name: str, depth: int) -> str:
     )
 
 
+def huristic_score(latency, bram, base_latency, base_bram, alpha):
+    relative_latency = latency / base_latency
+    if base_bram == 0:
+        base_bram = 1
+
+    relative_bram = bram / base_bram
+
+    score = alpha * relative_latency + (1 - alpha) * relative_bram
+    return score
+
+
 def serialize_eval_results(
     results: list[EvalResult], fifo_id_to_name_map: dict[int, str]
 ) -> dict[str, Any]:
@@ -214,9 +227,23 @@ def serialize_eval_results(
     }
     payload["evaluations"] = []
 
-    pareto_results = is_pareto_efficient_simple(results)
+    pareto_results_mask = is_pareto_efficient_simple(results)
 
-    for result, is_pareto in zip(results, pareto_results):
+    _pareto_results = [
+        result for result, is_pareto in zip(results, pareto_results_mask) if is_pareto
+    ]
+    # pareto_results_huristic_scores = [
+    #     huristic_score(
+    #         result.latency,
+    #         result.bram_usage_total,
+    #         PLACEHOLDER,  # TODO: fix baseline values to be baseline max
+    #         PLACEHOLDER,  # TODO: fix baseline values to be baseline max
+    #         alpha=0.5,
+    #     )
+    #     for result in pareto_results
+    # ]
+
+    for result, is_pareto in zip(results, pareto_results_mask):
         payload["evaluations"].append(
             {
                 "fifo_sizes": {
