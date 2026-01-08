@@ -6,7 +6,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from fifo_advisor.opt_env import EvalResult, FIFOOptimizer, LSEnv
+from fifo_advisor.opt_env import (
+    EvalResult,
+    FIFOOptimizer,
+    LSEnv,
+    is_pareto_efficient_simple,
+)
 from fifo_advisor.solvers import (
     ROUND_TYPE,
     DiscreteSimulatedAnnealingOptimizer,
@@ -159,34 +164,87 @@ def collect_solver_kwargs(
     return solver_spec.cls, solver_kwargs
 
 
+def fifo_id_to_name_map_from_env(sim_env: LSEnv) -> dict[int, str]:
+    fifo_id_to_name: dict[int, str] = {}
+    set_ids = set()
+    set_names = set()
+    for fifo in sim_env.fifos:
+        # fifo_id_to_name[fifo.id] = fifo.name
+        fifo_id = fifo.id
+        fifo_name = fifo.name
+        # check that fifo_id is not already in the map
+        if fifo_id in set_ids:
+            raise ValueError(f"Duplicate FIFO ID found: {fifo_id}")
+        # check that fifo_name is not already in the map
+        if fifo_name in set_names:
+            raise ValueError(f"Duplicate FIFO name found: {fifo_name}")
+        fifo_id_to_name[fifo_id] = fifo_name
+        set_ids.add(fifo_id)
+        set_names.add(fifo_name)
+    return fifo_id_to_name
+
+
 def main(args: argparse.Namespace) -> None:
     solution_dir: Path = args.solution_dir
     sim_env = LSEnv(solution_dir)
+    fifo_id_to_name_map = fifo_id_to_name_map_from_env(sim_env)
     solver_cls, solver_kwargs = collect_solver_kwargs(args)
     optimizer = solver_cls(sim_env, **solver_kwargs)
     results = optimizer.solve()
-    serialized = serialize_eval_results(results)
+    serialized = serialize_eval_results(results, fifo_id_to_name_map)
     emit_results(serialized, args.output)
 
 
-def serialize_eval_results(results: list[EvalResult]) -> list[dict[str, Any]]:
-    payload: list[dict[str, Any]] = []
-    for result in results:
-        payload.append(
+def fifo_config_to_inline_pragma(fifo_name: str, depth: int) -> str:
+    return f"#pragma HLS STREAM variable={fifo_name} depth={depth}"
+
+
+def fifo_config_to_tcl_config(fifo_name: str, depth: int) -> str:
+    return (
+        f"set_directive_stream -depth {depth} -type fifo {{{{location}}}} {fifo_name}"
+    )
+
+
+def serialize_eval_results(
+    results: list[EvalResult], fifo_id_to_name_map: dict[int, str]
+) -> dict[str, Any]:
+    payload = {}
+    payload["fifo_id_to_name_map"] = {
+        str(fifo_id): name for fifo_id, name in fifo_id_to_name_map.items()
+    }
+    payload["evaluations"] = []
+
+    pareto_results = is_pareto_efficient_simple(results)
+
+    for result, is_pareto in zip(results, pareto_results):
+        payload["evaluations"].append(
             {
                 "fifo_sizes": {
                     str(fifo_id): depth for fifo_id, depth in result.fifo_sizes.items()
+                },
+                "fifo_config_inline_pragmas": {
+                    fifo_id_to_name_map[fifo_id]: fifo_config_to_inline_pragma(
+                        fifo_id_to_name_map[fifo_id], depth
+                    )
+                    for fifo_id, depth in result.fifo_sizes.items()
+                },
+                "fifo_config_tcl_commands": {
+                    fifo_id_to_name_map[fifo_id]: fifo_config_to_tcl_config(
+                        fifo_id_to_name_map[fifo_id], depth
+                    )
+                    for fifo_id, depth in result.fifo_sizes.items()
                 },
                 "deadlock": result.deadlock,
                 "latency": result.latency,
                 "bram_usage_total": result.bram_usage_total,
                 "timestamp": result.timestamp,
+                "is_pareto_optimal": is_pareto,
             }
         )
     return payload
 
 
-def emit_results(payload: list[dict[str, Any]], output_path: Path) -> None:
+def emit_results(payload: dict[str, Any], output_path: Path) -> None:
     json_blob = json.dumps(payload, indent=2)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json_blob)
