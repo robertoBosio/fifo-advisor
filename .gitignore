@@ -11,3 +11,5 @@
 *.egg-info/
 dist/
 build/
+
+fifo_advisor_results.json
