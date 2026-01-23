@@ -27,7 +27,7 @@ config_compile -pipeline_style flp
 #csim_design
 csynth_design
 #cosim_design
-export_design -flow syn
+#export_design -flow syn
 
 exit
 
