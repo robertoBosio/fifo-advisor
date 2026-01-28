@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import argparse
+from datetime import date, datetime
+import enum
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from time import time
 from typing import Any
 
 from matplotlib.pylab import pareto
@@ -33,15 +36,15 @@ class SolverSpec:
 SOLVER_SPECS: dict[str, SolverSpec] = {
     "random": SolverSpec(
         cls=RandomSearchOptimizer,
-        allowed_kwargs={"n_samples", "seed"},
+        allowed_kwargs={"n_samples", "seed", "cross_value"},
     ),
     "group-random": SolverSpec(
         cls=GroupRandomSearchOptimizer,
-        allowed_kwargs={"n_samples", "seed"},
+        allowed_kwargs={"n_samples", "seed", "cross_value"},
     ),
     "heuristic": SolverSpec(
         cls=HeuristicOptimizer,
-        allowed_kwargs=set(),
+        allowed_kwargs={'cross_value'},
     ),
     "sa": SolverSpec(
         cls=DiscreteSimulatedAnnealingOptimizer,
@@ -50,6 +53,7 @@ SOLVER_SPECS: dict[str, SolverSpec] = {
             "n_scaling_factors",
             "round_type",
             "init_with_largest",
+            "cross_value",
         },
     ),
     "group-sa": SolverSpec(
@@ -59,6 +63,7 @@ SOLVER_SPECS: dict[str, SolverSpec] = {
             "n_scaling_factors",
             "round_type",
             "init_with_largest",
+            "cross_value",
         },
     ),
 }
@@ -104,6 +109,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Evaluation budget for simulated annealing solvers.",
     )
     parser.add_argument(
+        "--cross_value",
+        type=int,
+        default=0,
+        help="CSDFG solution FIFO memory value to cross during optimization (default: 0).",
+    )
+    parser.add_argument(
         "--n-scaling-factors",
         type=int,
         default=None,
@@ -123,7 +134,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("fifo_advisor_results.json"),
+        default=None,
         help="Write optimizer evaluations to this JSON file (default: fifo_advisor_results.json).",
     )
     return parser
@@ -141,6 +152,7 @@ def collect_solver_kwargs(
         "maxfun": args.maxfun,
         "n_scaling_factors": args.n_scaling_factors,
         "round_type": args.round_type,
+        "cross_value": args.cross_value,
     }
 
     solver_kwargs: dict[str, Any] = {}
@@ -191,9 +203,10 @@ def main(args: argparse.Namespace) -> None:
     sim_env = LSEnv(solution_dir)
     fifo_id_to_name_map = fifo_id_to_name_map_from_env(sim_env)
     solver_cls, solver_kwargs = collect_solver_kwargs(args)
+    print(f"Using solver: {solver_cls.__name__} with args {solver_kwargs}")
     optimizer = solver_cls(sim_env, **solver_kwargs)
     results = optimizer.solve()
-    serialized = serialize_eval_results(results, fifo_id_to_name_map)
+    serialized = serialize_eval_results(results, fifo_id_to_name_map, solver_kwargs)
     emit_results(serialized, args.output)
 
 
@@ -205,7 +218,6 @@ def fifo_config_to_tcl_config(fifo_name: str, depth: int) -> str:
     return (
         f"set_directive_stream -depth {depth} -type fifo {{{{location}}}} {fifo_name}"
     )
-
 
 def huristic_score(latency, bram, base_latency, base_bram, alpha):
     relative_latency = latency / base_latency
@@ -219,7 +231,7 @@ def huristic_score(latency, bram, base_latency, base_bram, alpha):
 
 
 def serialize_eval_results(
-    results: list[EvalResult], fifo_id_to_name_map: dict[int, str]
+    results: list[EvalResult], fifo_id_to_name_map: dict[int, str], solver_kwargs: dict[str, Any]
 ) -> dict[str, Any]:
     payload = {}
     payload["fifo_id_to_name_map"] = {
@@ -243,31 +255,37 @@ def serialize_eval_results(
     #     for result in pareto_results
     # ]
 
-    for result, is_pareto in zip(results, pareto_results_mask):
-        payload["evaluations"].append(
-            {
-                "fifo_sizes": {
-                    str(fifo_id): depth for fifo_id, depth in result.fifo_sizes.items()
-                },
-                "fifo_config_inline_pragmas": {
-                    fifo_id_to_name_map[fifo_id]: fifo_config_to_inline_pragma(
-                        fifo_id_to_name_map[fifo_id], depth
-                    )
-                    for fifo_id, depth in result.fifo_sizes.items()
-                },
-                "fifo_config_tcl_commands": {
-                    fifo_id_to_name_map[fifo_id]: fifo_config_to_tcl_config(
-                        fifo_id_to_name_map[fifo_id], depth
-                    )
-                    for fifo_id, depth in result.fifo_sizes.items()
-                },
-                "deadlock": result.deadlock,
-                "latency": result.latency,
-                "bram_usage_total": result.bram_usage_total,
-                "timestamp": result.timestamp,
-                "is_pareto_optimal": is_pareto,
-            }
-        )
+    payload['args'] = {
+        key: (value.name if isinstance(value, enum.Enum) else value)
+        for key, value in solver_kwargs.items()
+    }
+    result = results[0]
+    payload["evaluations"] = {
+        "fifo_sizes": {
+            str(fifo_id_to_name_map[fifo_id]): depth for fifo_id, depth in result.fifo_sizes.items()
+        },
+        # "fifo_config_inline_pragmas": {
+        #     fifo_id_to_name_map[fifo_id]: fifo_config_to_inline_pragma(
+        #         fifo_id_to_name_map[fifo_id], depth
+        #     )
+        #     for fifo_id, depth in result.fifo_sizes.items()
+        # },
+        # "fifo_config_tcl_commands": {
+        #     fifo_id_to_name_map[fifo_id]: fifo_config_to_tcl_config(
+        #         fifo_id_to_name_map[fifo_id], depth
+        #     )
+        #     for fifo_id, depth in result.fifo_sizes.items()
+        # },
+        "deadlock": result.deadlock,
+        "latency": result.latency,
+        "bram_usage_total": result.bram_usage_total,
+        "byte_usage_total": result.byte_usage_total,
+        "timestamp": result.timestamp,
+        # "is_pareto_optimal": is_pareto,
+        "dse_time": f"{result.end_time:.6f}",
+        "cross_time": f"{result.cross_time:.6f}",
+    }
+    
     return payload
 
 
@@ -280,6 +298,9 @@ def emit_results(payload: dict[str, Any], output_path: Path) -> None:
 def cli() -> None:
     parser = build_parser()
     args = parser.parse_args()
+    if args.output is None:
+        # Add date and time to output filename
+        args.output = Path(f"{args.solver}_fifo_advisor_{datetime.now().strftime('%Y%m%d-%H%M%S')}.json")
     try:
         main(args)
     except ValueError as exc:

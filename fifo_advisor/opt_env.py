@@ -21,9 +21,11 @@ class EvalResult:
 
     latency: float | None
     bram_usage_total: int | None
-    # bram_usage_per_fifo: dict[int, int] | None
+    byte_usage_total: int | None = None
 
     timestamp: float | None = None
+    cross_time : float | None = None
+    end_time : float | None = None
 
 
 EvalResults = list[EvalResult]
@@ -98,6 +100,18 @@ class LSEnv:
             fifo_id: int = fifo.id
             fifo_depth: int | None = self.trace_base.params.fifo_depths[fifo_id]
             self.fifo_sizes_base[fifo_id] = fifo_depth
+    
+    def evaluate_fifo_memory(self, x: dict[int, int]) -> int:
+        """Compute total FIFO memory usage in bytes given depths (None=∞ → ignored)."""
+        import math
+        total = 0
+        for fifo in self.trace_base.fifos:
+            d = x.get(fifo.id, None)
+            if d is None:
+                continue
+            width_bytes = math.ceil(fifo.width / 8)
+            total += d * width_bytes
+        return total
 
     def eval_solution_single(self, x: dict[int, int]) -> EvalResult:
         base_params = self.trace_base.params
@@ -114,16 +128,19 @@ class LSEnv:
             deadlock = True
             latency = None
             bram_usage_total = None
+            bytes_usage_total = None
         else:
             deadlock = False
             latency = dse_result.latency
             bram_usage_total = dse_result.bram_count
+            bytes_usage_total = self.evaluate_fifo_memory(fifo_sizes)
 
         return EvalResult(
             fifo_sizes=fifo_sizes,
             deadlock=deadlock,
             latency=latency,
             bram_usage_total=bram_usage_total,
+            byte_usage_total=bytes_usage_total,
             timestamp=t,
         )
 
@@ -173,8 +190,9 @@ class LSEnv:
 
 
 class FIFOOptimizer(ABC):
-    def __init__(self, sim_env: LSEnv):
+    def __init__(self, sim_env: LSEnv, cross_value: int = 0):
         self.sim_env: LSEnv = sim_env
+        self.csdfg_sol: int = cross_value
 
     @abstractmethod
     def solve(self) -> list[EvalResult]:

@@ -4,6 +4,7 @@ import random
 from collections import defaultdict
 from copy import deepcopy
 from multiprocessing.pool import ThreadPool
+import time
 from typing import Union
 
 import numpy as np
@@ -411,12 +412,13 @@ class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
         n_scaling_factors: int = 8,
         round_type: ROUND_TYPE = ROUND_TYPE.RINT,
         init_with_largest: bool = False,
+        cross_value: int = 0,
     ):
         super().__init__(sim_env)
         self.maxfun = maxfun
         self.round_type = round_type
         self.init_with_largest = init_with_largest
-
+        self.cross_value = cross_value
         self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
         self.n_scaling_factors = n_scaling_factors
         self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
@@ -431,6 +433,15 @@ class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
                 fifo_depths = self.sim_env.trace_base.compiled.get_fifo_design_space(
                     [fifo_id], fifo.width
                 )
+                # generate a linear space between 2 and max depth
+                # for i in range(len(fifo_depths) - 1):
+                #     start = fifo_depths[i]
+                #     end = fifo_depths[i + 1]
+                #     new_fifo_depths = list(np.linspace(start, end, num=5, dtype=int))
+                #     new_fifo_depths = [int(depth) for depth in new_fifo_depths]
+                #     fifo_depths.extend(new_fifo_depths)
+                # fifo_depths = sorted(list(set(fifo_depths)))
+                # fifo_depths = [int(depth) for depth in fifo_depths]
                 if fifo_depths == [2]:
                     fifo_depths = [2, 64 * fifo.width]
                 print(f"FIFO {fifo_id} design space: {fifo_depths}")
@@ -443,67 +454,118 @@ class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
             bounds = (0, len(self.fifos_dse_space[fifo_id]) - 1)
             self.fifos_dse_space_bounds.append(bounds)
 
+    def index_to_fifo_sizes(self, x: np.ndarray) -> dict[int, int]:
+        return {
+            fifo_id: self.fifos_dse_space[fifo_id][x]
+            for fifo_id, x in zip(self.fifo_ids, x)
+        }
+
+    def update_best_solution(
+        self,
+        best_solution: EvalResult,
+        candidate_solution: EvalResult,
+        start_time: float,
+        crossed: bool,
+    ) -> tuple[EvalResult, bool]:
+        if (
+            candidate_solution.byte_usage_total <= best_solution.byte_usage_total
+            and not candidate_solution.deadlock
+        ):
+            if not crossed:
+                if candidate_solution.byte_usage_total < self.cross_value:
+                    crossed = True
+                    candidate_solution.cross_time = time.perf_counter() - start_time
+            else:
+                candidate_solution.cross_time = best_solution.cross_time
+            best_solution = candidate_solution
+        return best_solution, crossed
+
     def solve(self) -> list[EvalResult]:
-        results = []
 
-        results_all = []
+        best_solution = None
+        x0 = None
+        crossed = False
+        if self.init_with_largest:
+            x0 = np.array(
+                [
+                    len(self.fifos_dse_space[fifo_id]) - 1
+                    for fifo_id in self.fifo_ids
+                ]
+            )
+            sol_sample = self.index_to_fifo_sizes(x0)
+            best_solution = self.sim_env.eval_solution_single(sol_sample)
+            baseline_latency = best_solution.latency
+            print(f"Baseline latency (init with largest): {baseline_latency}. Byte usage: {best_solution.byte_usage_total}")
 
+        else:
+            base_depths = {}
+            for fifo, fifo_io in self.sim_env.simulation_base.fifo_io.items():
+                fifo_id = fifo.id
+                base_depths[fifo_id] = max(fifo_io.get_observed_depth(), 2)
+            x0 = np.array(
+                [
+                    self.fifos_dse_space[fifo_id].index(
+                        next(
+                            depth
+                            for depth in self.fifos_dse_space[fifo_id]
+                            if depth >= base_depths[fifo_id]
+                        )
+                    )
+                    for fifo_id in self.fifo_ids
+                ]
+            )
+            sol_sample = self.index_to_fifo_sizes(x0)
+            best_solution = self.sim_env.eval_solution_single(sol_sample)
+            baseline_latency = best_solution.latency
+            print(f"Baseline latency (init with observed): {baseline_latency}. Byte usage: {best_solution.byte_usage_total}")
+
+        print("Starting Discrete Simulated Annealing optimization...")
+        start_time = time.perf_counter()
         for idx in range(self.n_scaling_factors):
-            scaling_factor_latency = self.dual_objective_scaling_factors[idx, 0]
-            scaling_factor_bram = self.dual_objective_scaling_factors[idx, 1]
 
             def objective_function(x: np.ndarray) -> float:
                 x = round(x, round_type=self.round_type).astype(int)
-                # sample = dict(zip(self.fifo_ids, x))  # Directly construct dictionary
-                sample = {}
-                for fifo_id, x_val in zip(self.fifo_ids, x):
-                    selected_fifo_size = self.fifos_dse_space[fifo_id][x_val]
-                    sample[fifo_id] = selected_fifo_size
 
+                # Build FIFO size sample by mapping index -> actual depth
+                sample = self.index_to_fifo_sizes(x)
                 y = self.sim_env.eval_solution_single(sample)
-                results_all.append(y)
 
-                if y.deadlock:
+                if y.deadlock or y.latency > baseline_latency:
                     return np.inf
 
-                return (
-                    scaling_factor_latency * y.latency
-                    + scaling_factor_bram * y.bram_usage_total
-                )
+                return y.byte_usage_total
 
             bounds = Bounds(
                 lb=[lower for lower, _upper in self.fifos_dse_space_bounds],  # type: ignore
                 ub=[upper for _lower, upper in self.fifos_dse_space_bounds],  # type: ignore
             )
 
-            x0 = None
-            if self.init_with_largest:
-                x0 = np.array(
-                    [
-                        len(self.fifos_dse_space[fifo_id]) - 1
-                        for fifo_id in self.fifo_ids
-                    ]
-                )
+            print(f"Starting optimization with scaling factor {idx + 1}/{self.n_scaling_factors}...")
 
             result = dual_annealing(
                 objective_function,
                 bounds=bounds,
                 maxfun=self.maxfun,
                 no_local_search=True,
-                rng=7,
+                rng=idx,
                 x0=x0,
             )
             x_rounded = round(result.x, self.round_type)
             x_python = x_rounded.tolist()
             x_python_int = [int(x) for x in x_python]
 
-            sol_sample = {
-                fifo_id: size for fifo_id, size in zip(self.fifo_ids, x_python_int)
-            }
+            sol_sample = self.index_to_fifo_sizes(x_python_int)
             sol_eval_results = self.sim_env.eval_solution_single(sol_sample)
-            results.append(sol_eval_results)
+            sol_eval_results.end_time = time.perf_counter() - start_time
+            best_solution, crossed = self.update_best_solution(
+                best_solution, sol_eval_results, start_time, crossed
+            )
+            print(f"Best solution so far: Byte usage = {best_solution.byte_usage_total}, Deadlock = {best_solution.deadlock}, Latency = {best_solution.latency}")
 
-        return results_all
+        best_solution.end_time = time.perf_counter() - start_time
+        if not crossed:
+            best_solution.cross_time = np.inf
+        return [best_solution]
 
 
 class MultiDiscreteSimulatedAnnealingOptimizer(MultiFIFOOptimizer):
@@ -671,12 +733,13 @@ class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
         n_scaling_factors: int = 8,
         round_type: ROUND_TYPE = ROUND_TYPE.RINT,
         init_with_largest: bool = False,
+        cross_value: int = 0,
     ):
         super().__init__(sim_env)
         self.maxfun = maxfun
         self.round_type = round_type
         self.init_with_largest = init_with_largest
-
+        self.cross_value = cross_value
         self.fifo_ids = [fifo.id for fifo in self.sim_env.fifos]
         self.n_scaling_factors = n_scaling_factors
         self.dual_objective_scaling_factors = compute_dual_obj_scaling_factors(
@@ -729,11 +792,30 @@ class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
         # print(self.fifo_group_bounds)
 
     def solve(self) -> list[EvalResult]:
-        results = []
 
-        results_all = []
+        x0 = None
+        if self.init_with_largest:
+            x0 = np.array(
+                [
+                    len(self.grouped_fifos_dse_space[fifo_group]) - 1
+                    for fifo_group in self.fifo_group_names
+                ]
+            )
+        sol_sample = {}
+        for fifo_group, x_val in zip(self.fifo_group_names, x0):
+            selected_fifo_size = self.grouped_fifos_dse_space[fifo_group][x_val]
+            for fifo_id in self.fifo_ids_groups[fifo_group]:
+                sol_sample[fifo_id] = selected_fifo_size
+        best_solution = self.sim_env.eval_solution_single(sol_sample)
+        baseline_latency = best_solution.latency
+        crossed = False
+        print(
+            f"Baseline latency (init with largest): {baseline_latency}. Byte usage: {best_solution.byte_usage_total}"
+        )
+        start_time = time.perf_counter()
 
         for idx in range(self.n_scaling_factors):
+            print(f"Starting optimization with scaling factor {idx + 1}/{self.n_scaling_factors}...")
             scaling_factor_latency = self.dual_objective_scaling_factors[idx, 0]
             scaling_factor_bram = self.dual_objective_scaling_factors[idx, 1]
 
@@ -747,49 +829,52 @@ class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
                         sample[fifo_id] = selected_fifo_size
 
                 y = self.sim_env.eval_solution_single(sample)
-                results_all.append(y)
 
-                if y.deadlock:
+                if y.deadlock or y.latency > baseline_latency:
                     return np.inf
 
-                return (
-                    scaling_factor_latency * y.latency
-                    + scaling_factor_bram * y.bram_usage_total
-                )
+                # return (
+                #     scaling_factor_latency * y.latency
+                #     + scaling_factor_bram * y.bram_usage_total
+                # )
+
+                print(f"Latency: {y.latency}, bytes: {y.byte_usage_total}")
+                return y.byte_usage_total
 
             bounds = Bounds(
                 lb=[lower for lower, _upper in self.fifo_group_bounds],  # type: ignore
                 ub=[upper for _lower, upper in self.fifo_group_bounds],  # type: ignore
             )
 
-            x0 = None
-            if self.init_with_largest:
-                x0 = np.array(
-                    [
-                        len(self.grouped_fifos_dse_space[fifo_group]) - 1
-                        for fifo_group in self.fifo_group_names
-                    ]
-                )
-
             result: OptimizeResult = dual_annealing(
                 objective_function,
                 bounds=bounds,
                 maxfun=self.maxfun,
                 no_local_search=True,
-                rng=7,
+                rng=idx,
                 x0=x0,
             )
             x_rounded = round(result.x, self.round_type)
             x_python = x_rounded.tolist()
             x_python_int = [int(x) for x in x_python]
 
-            sol_sample = {
-                fifo_id: size for fifo_id, size in zip(self.fifo_ids, x_python_int)
-            }
+            for fifo_group, x_val in zip(self.fifo_group_names, x_python_int):
+                selected_fifo_size = self.grouped_fifos_dse_space[fifo_group][x_val]
+                for fifo_id in self.fifo_ids_groups[fifo_group]:
+                    sol_sample[fifo_id] = selected_fifo_size
             sol_eval_results = self.sim_env.eval_solution_single(sol_sample)
-            results.append(sol_eval_results)
+            sol_eval_results.end_time = time.perf_counter() - start_time
+            if sol_eval_results.byte_usage_total < best_solution.byte_usage_total and not sol_eval_results.deadlock:
+                if not crossed:
+                    if sol_eval_results.byte_usage_total < self.cross_value:
+                        crossed = True
+                        sol_eval_results.cross_time = time.perf_counter() - start_time
+                else:
+                    sol_eval_results.cross_time = best_solution.cross_time
+                best_solution = sol_eval_results
 
-        return results_all
+        best_solution.end_time = time.perf_counter() - start_time
+        return [best_solution]
 
 
 class MultiGroupedDiscreteSimulatedAnnealingOptimizer(MultiFIFOOptimizer):
@@ -977,10 +1062,14 @@ class MultiGroupedDiscreteSimulatedAnnealingOptimizer(MultiFIFOOptimizer):
 
 
 class HeuristicOptimizer(FIFOOptimizer):
-    level_sets = [0.01, 0.05, 0.1, 0.2, 0.5, 1.0]
+    # level_sets = [0.01, 0.05, 0.1, 0.2, 0.5, 1.0]
+    level_sets = [1]
 
     def solve(self) -> list[EvalResult]:
-        all_evals = []
+        best_eval = None
+        starting_time = time.perf_counter()
+        crossed = False
+        eval_results_final = None
         for level in self.level_sets:
             print(f"Running heuristic optimization for level: {level}...")
 
@@ -988,19 +1077,23 @@ class HeuristicOptimizer(FIFOOptimizer):
             for fifo, fifo_io in self.sim_env.simulation_base.fifo_io.items():
                 fifo_id = fifo.id
                 base_depths[fifo_id] = max(fifo_io.get_observed_depth(), 2)
-
             eval_results = self.sim_env.eval_solution_single(base_depths)
-            all_evals.append(eval_results)
             assert not eval_results.deadlock
 
             base_latency = eval_results.latency
             base_bram_usage_total = eval_results.bram_usage_total
+            base_bytes = eval_results.byte_usage_total
+            print(
+                f"Base latency: {base_latency}, "
+                f"Base BRAM usage: {base_bram_usage_total}"
+                f", Base FIFO memory (bytes): {base_bytes}"
+            )
 
             assert base_latency is not None
             assert base_bram_usage_total is not None
-
+            assert base_bytes is not None
             fifo_ids_sorted_by_depth = sorted(
-                base_depths.keys(), key=lambda fifo_id: base_depths[fifo_id]
+                base_depths.keys(), key=lambda fifo_id: base_depths[fifo_id], reverse=True
             )
 
             fifo_ids_larger_than_two = [
@@ -1013,24 +1106,46 @@ class HeuristicOptimizer(FIFOOptimizer):
 
             for fifo_id in fifo_ids_larger_than_two:
                 new_sample = deepcopy(working_set_of_depths)
+                prev_depth = new_sample[fifo_id]
                 new_sample[fifo_id] = 2
                 eval_results_case = self.sim_env.eval_solution_single(new_sample)
-                all_evals.append(eval_results_case)
+                eval_results_case.end_time = time.perf_counter() - starting_time
+
                 if eval_results_case.deadlock:
                     continue
                 assert eval_results_case.latency is not None
-                if eval_results_case.latency > base_latency * 1.01:
+                # if eval_results_case.latency > base_latency * 1.01:
+                #     continue
+                if eval_results_case.latency > base_latency:
                     continue
+                
+                if not crossed:
+                    if eval_results_case.byte_usage_total < self.csdfg_sol:
+                        eval_results_case.cross_time = eval_results_case.end_time
+                        crossed = True
+                else:
+                    eval_results_case.cross_time = eval_results_final.cross_time
 
+                print(
+                    f"Reducing FIFO {fifo_id} depth from {prev_depth} to 2 "
+                    f"accepted: latency {eval_results_case.latency} "
+                )
                 working_set_of_depths[fifo_id] = 2
 
-            eval_results_final = self.sim_env.eval_solution_single(
-                working_set_of_depths
-            )
-            all_evals.append(eval_results_final)
-            assert not eval_results_final.deadlock
+                eval_results_final = eval_results_case
 
-        return all_evals
+
+            print(
+                f"Final eval: Latency = {eval_results_final.latency}, "
+                f"BRAM usage = {eval_results_final.bram_usage_total}, "
+                f"FIFO memory (bytes) = {eval_results_final.byte_usage_total}"
+                f" after {eval_results_final.end_time} seconds."
+                f"Crossed target: {self.csdfg_sol} at {eval_results_final.cross_time if crossed else 'N/A'}"
+            )
+            assert not eval_results_final.deadlock
+            best_eval = eval_results_final
+
+        return [best_eval] if best_eval is not None else []
 
 
 class MultiHeuristicOptimizer(MultiFIFOOptimizer):

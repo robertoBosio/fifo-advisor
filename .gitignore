@@ -15,3 +15,4 @@ build/
 fifo_advisor_results.json
 **_project/
 *.log
+*.json
