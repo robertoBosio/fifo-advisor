@@ -2,6 +2,7 @@
 import csv
 import re
 import sys
+import json
 from pathlib import Path
 
 PRAGMA_RE = re.compile(
@@ -30,7 +31,7 @@ def normalize_csv_key(key: str):
         return (m.group("base"), 0)
     return (key, 0)                           # name   -> (name, 0)
 
-def load_depth_map(csv_path: Path):
+def load_depth_map_csv(csv_path: Path):
     mapping = {}
     with csv_path.open(newline="") as f:
         reader = csv.reader(f)
@@ -47,16 +48,34 @@ def load_depth_map(csv_path: Path):
                 pass
     return mapping
 
+def load_depth_map_json(json_path: Path):
+    mapping = {}
+    with json_path.open() as f:
+        data = json.load(f)
+        fifo_data = data.get("evaluations", {}).get("fifo_sizes", {})
+        for key, val in fifo_data.items():
+            norm = normalize_csv_key(key)
+            if not norm:
+                continue
+            try:
+                mapping[norm] = int(val)
+            except ValueError:
+                pass
+    return mapping
+
 def main():
     if len(sys.argv) != 4:
-        print("Usage: python update_hls_depths.py <input.cpp> <depths.csv> <output.cpp>")
+        print("Usage: python fifo_setter.py <input.cpp> <depths.csv/depths.json> <output.cpp>")
         sys.exit(1)
 
     in_path  = Path(sys.argv[1])
-    csv_path = Path(sys.argv[2])
+    depth_map_path = Path(sys.argv[2])
     out_path = Path(sys.argv[3])
 
-    depth_map = load_depth_map(csv_path)
+    if depth_map_path.suffix.lower() == ".json":
+        depth_map = load_depth_map_json(depth_map_path)
+    else:
+        depth_map = load_depth_map_csv(depth_map_path)
 
     replaced = 0
     unmatched = 0

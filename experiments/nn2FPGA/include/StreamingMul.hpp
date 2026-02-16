@@ -6,10 +6,10 @@
 
 template <typename TInputWordA, typename TInputA, typename TInputWordB,
           typename TInputB, typename TOutputWord, typename TOutput,
-          typename TAcc, typename Activation, typename Quantizer,
-          typename AlignA, typename AlignB, size_t IN_HEIGHT, size_t IN_WIDTH,
-          size_t IN_CH, size_t W_PAR, size_t CH_PAR>
-class StreamingAdd {
+          typename TMul, typename Activation, typename Quantizer,
+          size_t IN_HEIGHT, size_t IN_WIDTH, size_t IN_CH, size_t W_PAR,
+          size_t CH_PAR>
+class StreamingMul {
 
   struct StepState {
     // Loop iteration indexes.
@@ -43,7 +43,7 @@ class StreamingAdd {
     st.init(pipeline_depth);
   }
 
-  StreamingAdd() = default;
+  StreamingMul() = default;
 
   template <size_t HLS_TAG>
   void run(hls::stream<TInputWordA> i_dataA[W_PAR],
@@ -53,7 +53,7 @@ class StreamingAdd {
     for (size_t i = 0; i < IN_HEIGHT * IN_WIDTH * IN_CH / (CH_PAR * W_PAR);
          i++) {
 #pragma HLS PIPELINE II = 1
-      StreamingAdd::pipeline_body(i_dataA, i_dataB, o_data);
+      StreamingMul::pipeline_body(i_dataA, i_dataB, o_data);
     }
   }
 
@@ -76,7 +76,7 @@ class StreamingAdd {
 
     if (firing_condition) {
       hls::stream<TOutputWord> o_data_instant[W_PAR];
-      StreamingAdd::pipeline_body(i_dataA, i_dataB, o_data_instant);
+      StreamingMul::pipeline_body(i_dataA, i_dataB, o_data_instant);
 
       // Update iterators
       st.i = (st.i + 1) % (IN_HEIGHT * IN_WIDTH * IN_CH / (CH_PAR * W_PAR));
@@ -84,7 +84,7 @@ class StreamingAdd {
       // Insert the firing status for the current step.
       st.actor_status.fire();
 
-      // Add the output to the delayed output buffers
+      // Mul the output to the delayed output buffers
       TOutputWord out_value;
       for (size_t i_w_par = 0; i_w_par < W_PAR; i_w_par++) {
         out_value = o_data_instant[i_w_par].read();
@@ -121,8 +121,6 @@ private:
     TOutputWord s_output_struct;
     Quantizer quantizer;
     Activation activation;
-    AlignA align_a;
-    AlignB align_b;
 
     for (size_t i_w_par = 0; i_w_par < W_PAR; i_w_par++) {
       // Read the input data structure from the input streams.
@@ -134,13 +132,13 @@ private:
         TInputA s_inputA_data = s_inputA_struct[i_ch_par];
         TInputB s_inputB_data = s_inputB_struct[i_ch_par];
 
-        // Perform the addition.
-        TAcc s_sum = align_a(s_inputA_data) + align_b(s_inputB_data);
+        // Perform the multiplication.
+        TMul s_mul = s_inputA_data * s_inputB_data;
         // Apply activation function.
-        s_sum = activation(s_sum);
+        s_mul = activation(s_mul);
 
         // Quantize the sum.
-        TOutput s_output_data = quantizer(s_sum);
+        TOutput s_output_data = quantizer(s_mul);
 
         // Store the quantized data in the output structure.
         s_output_struct[i_ch_par] = s_output_data;

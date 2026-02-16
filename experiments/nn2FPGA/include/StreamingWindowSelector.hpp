@@ -1,8 +1,8 @@
 #pragma once
 #include "hls_stream.h"
 #include "utils/CSDFG_utils.hpp"
-#include <cstddef>
 #include <cassert>
+#include <cstddef>
 
 /**
  * @brief Implements a single pixel of the line buffer. Discard and shifts
@@ -96,11 +96,10 @@ class StreamingWindowSelector {
                 "DILATION_H and DILATION_W must be 1");
 
 private:
-
   static void pipeline_body(hls::stream<TWord> &i_data,
                             hls::stream<TWord> &o_data,
                             hls::stream<TWord> &o_shift_data, size_t i_h,
-                            size_t i_w) {
+                            size_t i_w, size_t i_w_stride) {
 #pragma HLS inline
     TWord in_word = i_data.read();
 
@@ -108,7 +107,7 @@ private:
     is_within_window &= (i_h >= TOP_BORDER && i_h < BOTTOM_BORDER);
     is_within_window &= (i_w >= LEFT_BORDER && i_w < RIGHT_BORDER);
     is_within_window &= ((i_h % STRIDE_H) == H_ROW_MOD);
-    is_within_window &= (((i_w / W_PAR) % STRIDE_W) == W_COL_MOD);
+    is_within_window &= ((i_w_stride % STRIDE_W) == W_COL_MOD);
     if (is_within_window) {
       o_data.write(in_word);
     }
@@ -116,8 +115,8 @@ private:
   }
 
   static void pipeline_body(hls::stream<TWord> &i_data,
-                            hls::stream<TWord> &o_data, size_t i_h,
-                            size_t i_w) {
+                            hls::stream<TWord> &o_data, size_t i_h, size_t i_w,
+                            size_t i_w_stride) {
 #pragma HLS inline
     TWord in_word = i_data.read();
 
@@ -125,7 +124,7 @@ private:
     is_within_window &= (i_h >= TOP_BORDER && i_h < BOTTOM_BORDER);
     is_within_window &= (i_w >= LEFT_BORDER && i_w < RIGHT_BORDER);
     is_within_window &= ((i_h % STRIDE_H) == H_ROW_MOD);
-    is_within_window &= (((i_w / W_PAR) % STRIDE_W) == W_COL_MOD);
+    is_within_window &= ((i_w_stride % STRIDE_W) == W_COL_MOD);
     if (is_within_window) {
       o_data.write(in_word);
     }
@@ -133,21 +132,25 @@ private:
 
 public:
   StreamingWindowSelector() = default;
-  
+
   struct StepState {
     // Loop iteration indexes.
-    size_t i_h = 0, i_w = W_STREAM, i_ch = 0;
+    size_t i_h = 0, i_w = W_STREAM, i_w_stride = 0, i_ch = 0;
     PipelineDelayBuffer<TWord> delayed_output[2];
     ActorStatus actor_status{1, 1};
     bool initialized = false;
+    size_t depth = 1;
+    size_t shift_stream_depth = 1;
 
-    void init(size_t depth) {
+    void init(size_t depth, size_t shift_stream_depth) {
       if (initialized)
         return;
       delayed_output[0] = PipelineDelayBuffer<TWord>(depth);
       delayed_output[1] = PipelineDelayBuffer<TWord>(depth);
       actor_status =
           ActorStatus(depth, IN_HEIGHT * (IN_WIDTH / W_PAR) * (IN_CH / CH_PAR));
+      this->depth = depth;
+      this->shift_stream_depth = shift_stream_depth;
       initialized = true;
     }
   };
@@ -158,9 +161,9 @@ public:
     return r;
   }
 
-  void step_init(size_t pipeline_depth = 1) {
+  void step_init(size_t pipeline_depth = 1, size_t shift_stream_depth = 1) {
     auto &st = registry()[this];
-    st.init(pipeline_depth);
+    st.init(pipeline_depth, shift_stream_depth);
   }
 
   template <size_t HLS_TAG>
@@ -168,12 +171,13 @@ public:
            hls::stream<TWord> &o_shift_data) {
 
     for (size_t i_h = 0; i_h < IN_HEIGHT; i_h++) {
-      for (size_t i_w = W_STREAM; i_w < IN_WIDTH; i_w += W_PAR) {
+      for (size_t i_w = W_STREAM, i_w_stride = 0; i_w < IN_WIDTH;
+           i_w += W_PAR, i_w_stride++) {
       WINDOWSELECTOR_RUN_LOOP:
-        for (size_t i_ch = 0; i_ch < IN_CH; i_ch += CH_PAR) {
+        for (size_t i_ch = 0; i_ch < IN_CH / CH_PAR; i_ch++) {
 #pragma HLS pipeline II = 1
           StreamingWindowSelector::pipeline_body(i_data, o_data, o_shift_data,
-                                                 i_h, i_w);
+                                                 i_h, i_w, i_w_stride);
         }
       }
     }
@@ -188,24 +192,27 @@ public:
 
     // Compute firing condition.
     bool firing_condition = true;
-    if (i_data.empty()) {
+    if (i_data.size() < st.shift_stream_depth) {
       firing_condition = false;
     }
 
     if (firing_condition) {
       hls::stream<TWord> instant_o_data[1];
       hls::stream<TWord> instant_o_shift_data[1];
-      StreamingWindowSelector::pipeline_body(
-          i_data, instant_o_data[0], instant_o_shift_data[0], st.i_h, st.i_w);
+      StreamingWindowSelector::pipeline_body(i_data, instant_o_data[0],
+                                             instant_o_shift_data[0], st.i_h,
+                                             st.i_w, st.i_w_stride);
 
       st.i_ch += CH_PAR;
       if (st.i_ch >= IN_CH) {
         st.i_ch = 0;
         st.i_w += W_PAR;
+        st.i_w_stride++;
       }
       if (st.i_w >= IN_WIDTH) {
         st.i_w = W_STREAM;
         st.i_h++;
+        st.i_w_stride = 0;
       }
       if (st.i_h >= IN_HEIGHT) {
         st.i_h = 0;
@@ -228,22 +235,18 @@ public:
         // If the output stream is empty, push a placeholder.
         st.delayed_output[1].push(TWord(), false);
       }
-    } else {
-      // If no data is available, push empty outputs.
-      st.delayed_output[0].push(TWord(), false);
-      st.delayed_output[1].push(TWord(), false);
-    }
 
-    // Advance the state of the actor firings.
-    st.actor_status.advance();
+      // Advance the state of the actor firings.
+      st.actor_status.advance();
 
-    // Write the output data to the output stream.
-    TWord out;
-    if (st.delayed_output[0].pop(out)) {
-      o_data.write(out);
-    }
-    if (st.delayed_output[1].pop(out)) {
-      o_shift_data.write(out);
+      // Write the output data to the output stream.
+      TWord out;
+      if (st.delayed_output[0].pop(out)) {
+        o_data.write(out);
+      }
+      if (st.delayed_output[1].pop(out)) {
+        o_shift_data.write(out);
+      }
     }
 
     return st.actor_status;
@@ -252,11 +255,13 @@ public:
   template <size_t HLS_TAG>
   void run(hls::stream<TWord> &i_data, hls::stream<TWord> &o_data) {
     for (size_t i_h = 0; i_h < IN_HEIGHT; i_h++) {
-      for (size_t i_w = W_STREAM; i_w < IN_WIDTH; i_w += W_PAR) {
+      for (size_t i_w = W_STREAM, i_w_stride = 0; i_w < IN_WIDTH;
+           i_w += W_PAR, i_w_stride++) {
       WINDOWSELECTOR_RUN_LOOP:
-        for (size_t i_ch = 0; i_ch < IN_CH; i_ch += CH_PAR) {
+        for (size_t i_ch = 0; i_ch < IN_CH / CH_PAR; i_ch++) {
 #pragma HLS pipeline II = 1
-          StreamingWindowSelector::pipeline_body(i_data, o_data, i_h, i_w);
+          StreamingWindowSelector::pipeline_body(i_data, o_data, i_h, i_w,
+                                                 i_w_stride);
         }
       }
     }
@@ -277,15 +282,17 @@ public:
     if (firing_condition) {
       hls::stream<TWord> instant_o_data[1];
       StreamingWindowSelector::pipeline_body(i_data, instant_o_data[0], st.i_h,
-                                             st.i_w);
+                                             st.i_w, st.i_w_stride);
 
       st.i_ch += CH_PAR;
       if (st.i_ch >= IN_CH) {
         st.i_ch = 0;
         st.i_w += W_PAR;
+        st.i_w_stride++;
       }
       if (st.i_w >= IN_WIDTH) {
         st.i_w = W_STREAM;
+        st.i_w_stride = 0;
         st.i_h++;
       }
       if (st.i_h >= IN_HEIGHT) {
@@ -302,9 +309,8 @@ public:
         // If the output stream is empty, push a placeholder.
         st.delayed_output[0].push(TWord(), false);
       }
-
     } else {
-      // If no data is available, push empty outputs.
+      // If not firing, just advance the delayed output buffer.
       st.delayed_output[0].push(TWord(), false);
     }
 
@@ -316,7 +322,7 @@ public:
     if (st.delayed_output[0].pop(out)) {
       o_data.write(out);
     }
-
+    
     return st.actor_status;
   }
 };

@@ -49,6 +49,11 @@ class LSEnv:
         try:
             with open(os.path.join(vitis_hls_solution_dir, "trace.pkl"), "rb") as f:
                 self.trace_base: ResolvedTrace = pickle.load(f)
+                print(f"Starting memory: {self.evaluate_fifo_memory(self.trace_base.params.fifo_depths)} bytes")
+                new_sample_fifo_depths = {}
+                for fifo_id, depth in self.trace_base.params.fifo_depths.items():
+                    new_sample_fifo_depths[fifo_id] = depth + 62 if depth is not None else 2
+                self.trace_base.params.fifo_depths = new_sample_fifo_depths
                 print("Loaded trace from pickle file.")
 
         except FileNotFoundError:

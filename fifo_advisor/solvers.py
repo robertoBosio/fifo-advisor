@@ -533,6 +533,7 @@ class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
                 if y.deadlock or y.latency > baseline_latency:
                     return np.inf
 
+                print(f"Latency: {y.latency}, bytes: {y.byte_usage_total}")
                 return y.byte_usage_total
 
             bounds = Bounds(
@@ -546,10 +547,20 @@ class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
                 objective_function,
                 bounds=bounds,
                 maxfun=self.maxfun,
-                no_local_search=True,
+                no_local_search=False,
                 rng=idx,
                 x0=x0,
             )
+            # result = dual_annealing(
+            #     objective_function,
+            #     bounds=bounds,
+            #     x0=x0,
+            #     visit=2.53,      # less exploratory
+            #     accept=-5.0,   # more conservative
+            #     maxfun=self.maxfun,
+            #     no_local_search=True,
+            #     rng=idx,
+            # )
             x_rounded = round(result.x, self.round_type)
             x_python = x_rounded.tolist()
             x_python_int = [int(x) for x in x_python]
@@ -874,6 +885,8 @@ class GroupedDiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
                 best_solution = sol_eval_results
 
         best_solution.end_time = time.perf_counter() - start_time
+        if not crossed:
+            best_solution.cross_time = np.inf
         return [best_solution]
 
 
@@ -1144,6 +1157,119 @@ class HeuristicOptimizer(FIFOOptimizer):
             )
             assert not eval_results_final.deadlock
             best_eval = eval_results_final
+        
+        if not crossed:
+            best_eval.cross_time = np.inf
+
+        return [best_eval] if best_eval is not None else []
+
+class BisectionOptimizer(FIFOOptimizer):
+    # level_sets = [0.01, 0.05, 0.1, 0.2, 0.5, 1.0]
+    level_sets = [1]
+
+    def solve(self) -> list[EvalResult]:
+        best_eval = None
+        starting_time = time.perf_counter()
+        crossed = False
+        eval_results_final = None
+        for level in self.level_sets:
+            print(f"Running bisection optimization for level: {level}...")
+
+            base_depths = {}
+            for fifo, fifo_io in self.sim_env.simulation_base.fifo_io.items():
+                fifo_id = fifo.id
+                base_depths[fifo_id] = max(fifo_io.get_observed_depth(), 2)
+            eval_results = self.sim_env.eval_solution_single(base_depths)
+            assert not eval_results.deadlock
+
+            base_latency = eval_results.latency
+            base_bram_usage_total = eval_results.bram_usage_total
+            base_bytes = eval_results.byte_usage_total
+            print(
+                f"Base latency: {base_latency}, "
+                f"Base BRAM usage: {base_bram_usage_total}"
+                f", Base FIFO memory (bytes): {base_bytes}"
+            )
+
+            assert base_latency is not None
+            assert base_bram_usage_total is not None
+            assert base_bytes is not None
+            fifo_ids_sorted_by_depth = sorted(
+                base_depths.keys(), key=lambda fifo_id: base_depths[fifo_id], reverse=True
+            )
+
+            fifo_ids_larger_than_two = [
+                fifo_id
+                for fifo_id in fifo_ids_sorted_by_depth
+                if base_depths[fifo_id] > 2
+            ]
+
+            working_set_of_depths = deepcopy(base_depths)
+
+            modified = True
+            while modified:
+                modified = False
+                
+                for fifo_id in fifo_ids_larger_than_two:
+                    new_sample = deepcopy(working_set_of_depths)
+                    prev_depth = new_sample[fifo_id]
+                    new_sample[fifo_id] = new_sample[fifo_id] // 2
+                    if new_sample[fifo_id] < 2:
+                        new_sample[fifo_id] = 2
+                    if new_sample[fifo_id] == prev_depth:
+                        continue
+                    eval_results_case = self.sim_env.eval_solution_single(new_sample)
+                    eval_results_case.end_time = time.perf_counter() - starting_time
+
+                    if eval_results_case.deadlock:
+                        continue
+                    assert eval_results_case.latency is not None
+                    # if eval_results_case.latency > base_latency * 1.01:
+                    #     continue
+                    if eval_results_case.latency > base_latency:
+                        continue
+                    modified = True
+
+                    if not crossed:
+                        if eval_results_case.byte_usage_total < self.csdfg_sol:
+                            eval_results_case.cross_time = eval_results_case.end_time
+                            crossed = True
+                    else:
+                        eval_results_case.cross_time = eval_results_final.cross_time
+
+                    print(
+                        f"Reducing FIFO {fifo_id} depth from {prev_depth} to {new_sample[fifo_id]} "
+                        f"accepted: latency {eval_results_case.latency} "
+                    )
+                    working_set_of_depths[fifo_id] = new_sample[fifo_id]
+
+                    eval_results_final = eval_results_case
+
+                # Sorting again in case depths have changed
+                fifo_ids_sorted_by_depth = sorted(
+                    working_set_of_depths.keys(),
+                    key=lambda fifo_id: working_set_of_depths[fifo_id],
+                    reverse=True,
+                )
+
+                fifo_ids_larger_than_two = [
+                    fifo_id
+                    for fifo_id in fifo_ids_sorted_by_depth
+                    if working_set_of_depths[fifo_id] > 2
+                ]
+
+            print(
+                f"Final eval: Latency = {eval_results_final.latency}, "
+                f"BRAM usage = {eval_results_final.bram_usage_total}, "
+                f"FIFO memory (bytes) = {eval_results_final.byte_usage_total}"
+                f" after {eval_results_final.end_time} seconds."
+                f"Crossed target: {self.csdfg_sol} at {eval_results_final.cross_time if crossed else 'N/A'}"
+            )
+            assert not eval_results_final.deadlock
+            best_eval = eval_results_final
+
+        if not crossed:
+            best_eval.cross_time = np.inf
 
         return [best_eval] if best_eval is not None else []
 

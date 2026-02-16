@@ -24,6 +24,7 @@ from fifo_advisor.solvers import (
     GroupRandomSearchOptimizer,
     HeuristicOptimizer,
     RandomSearchOptimizer,
+    BisectionOptimizer,
 )
 
 
@@ -63,6 +64,12 @@ SOLVER_SPECS: dict[str, SolverSpec] = {
             "n_scaling_factors",
             "round_type",
             "init_with_largest",
+            "cross_value",
+        },
+    ),
+    "bisection": SolverSpec(
+        cls=BisectionOptimizer,
+        allowed_kwargs={
             "cross_value",
         },
     ),
@@ -203,7 +210,6 @@ def main(args: argparse.Namespace) -> None:
     sim_env = LSEnv(solution_dir)
     fifo_id_to_name_map = fifo_id_to_name_map_from_env(sim_env)
     solver_cls, solver_kwargs = collect_solver_kwargs(args)
-    print(f"Using solver: {solver_cls.__name__} with args {solver_kwargs}")
     optimizer = solver_cls(sim_env, **solver_kwargs)
     results = optimizer.solve()
     serialized = serialize_eval_results(results, fifo_id_to_name_map, solver_kwargs)
