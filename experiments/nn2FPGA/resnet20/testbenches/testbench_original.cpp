@@ -22,7 +22,7 @@ int main(int argc, char** argv)
     hls::stream<ap_axiu<128, 0, 0, 0>> global_in;
     std::string file_global_in_1 = argv[2];
     hls::stream<ap_axiu<128, 0, 0, 0>> global_in_1;
-    std::string file_global_out = argv[3];
+    std::string file_global_out = "tmp.txt";
     hls::stream<ap_axiu<128, 0, 0, 0>> global_out;
     txt_to_hls_stream<ap_axiu<128, 0, 0, 0>, ap_int<8>, char>(file_global_in, global_in, 16);
     txt_to_hls_stream<ap_axiu<128, 0, 0, 0>, ap_uint<32>, unsigned int>(file_global_in_1, global_in_1, 4);

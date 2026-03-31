@@ -49,11 +49,26 @@ class LSEnv:
         try:
             with open(os.path.join(vitis_hls_solution_dir, "trace.pkl"), "rb") as f:
                 self.trace_base: ResolvedTrace = pickle.load(f)
-                print(f"Starting memory: {self.evaluate_fifo_memory(self.trace_base.params.fifo_depths)} bytes")
-                new_sample_fifo_depths = {}
-                for fifo_id, depth in self.trace_base.params.fifo_depths.items():
-                    new_sample_fifo_depths[fifo_id] = depth + 62 if depth is not None else 2
-                self.trace_base.params.fifo_depths = new_sample_fifo_depths
+                # self.simulation_base = self.trace_base.compiled.execute(self.trace_base.params)
+                # eval_results = self.eval_solution_single(self.trace_base.params.fifo_depths)
+                # print(f"Starting memory: {self.evaluate_fifo_memory(self.trace_base.params.fifo_depths)} bytes. Starting latency: {eval_results.latency}.")
+                # base_latency = eval_results.latency
+                # new_sample_fifo_depths = self.trace_base.params.fifo_depths.copy()
+                # for fifo_id, depth in self.trace_base.params.fifo_depths.items():
+
+                #     # new_sample_fifo_depths[fifo_id] = max(self.trace_base.compiled.get_fifo_design_space([fifo_id], 8)[-1], depth)
+                #     new_sample_fifo_depths[fifo_id] = depth + 100000
+                #     self.trace_base.params.fifo_depths = new_sample_fifo_depths
+                #     print(f"FIFO {fifo_id}: depth {depth} → {new_sample_fifo_depths[fifo_id]}")
+                #     if (fifo_id % 20 == 0):
+                #         self.simulation_base = self.trace_base.compiled.execute(self.trace_base.params)
+                #         eval_results = self.eval_solution_single(new_sample_fifo_depths)
+                #         if eval_results.latency > base_latency:
+                #             print(f"Latency increased to {eval_results.latency} after increasing FIFO {fifo_id} depth to {new_sample_fifo_depths[fifo_id]}. Reverting change.")
+                #             exit()
+                #     # new_sample_fifo_depths[fifo_id] = depth
+                # exit()
+                # self.trace_base.params.fifo_depths = new_sample_fifo_depths
                 print("Loaded trace from pickle file.")
 
         except FileNotFoundError:
@@ -105,7 +120,7 @@ class LSEnv:
             fifo_id: int = fifo.id
             fifo_depth: int | None = self.trace_base.params.fifo_depths[fifo_id]
             self.fifo_sizes_base[fifo_id] = fifo_depth
-    
+
     def evaluate_fifo_memory(self, x: dict[int, int]) -> int:
         """Compute total FIFO memory usage in bytes given depths (None=∞ → ignored)."""
         import math

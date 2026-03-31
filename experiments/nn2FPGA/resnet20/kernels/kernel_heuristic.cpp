@@ -60,14 +60,14 @@ void resnet20(hls::stream<ap_axiu<128, 0, 0, 0>>& global_in, hls::stream<ap_axiu
     #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream[10] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream[11] depth=2
     hls::stream<std::array<ap_int<8>, 1>> StreamingLineBuffer_0_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[0] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[2] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[3] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[4] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[5] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[6] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[7] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[0] depth=92
+    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[1] depth=97
+    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[2] depth=97
+    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[3] depth=91
+    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[4] depth=49
+    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[5] depth=52
+    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[6] depth=51
+    #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[7] depth=46
     #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[9] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_0_out0_stream_prepad[10] depth=2
@@ -75,23 +75,23 @@ void resnet20(hls::stream<ap_axiu<128, 0, 0, 0>>& global_in, hls::stream<ap_axiu
     hls::stream<std::array<ap_int<8>, 1>> StreamingLineBuffer_0_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[2] depth=42
-    #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[3] depth=50
-    #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[4] depth=11
+    #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[4] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[5] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[6] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[7] depth=46
-    #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[8] depth=44
+    #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[7] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_0_buffer_stream[9] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingConv_0_out0_stream[2];
     #pragma HLS STREAM variable=StreamingConv_0_out0_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingConv_0_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> TensorDuplicator_0_out0_stream[2];
     #pragma HLS STREAM variable=TensorDuplicator_0_out0_stream[0] depth=2
-    #pragma HLS STREAM variable=TensorDuplicator_0_out0_stream[1] depth=65
+    #pragma HLS STREAM variable=TensorDuplicator_0_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> TensorDuplicator_0_out1_stream[2];
-    #pragma HLS STREAM variable=TensorDuplicator_0_out1_stream[0] depth=673
-    #pragma HLS STREAM variable=TensorDuplicator_0_out1_stream[1] depth=673
+    #pragma HLS STREAM variable=TensorDuplicator_0_out1_stream[0] depth=5521
+    #pragma HLS STREAM variable=TensorDuplicator_0_out1_stream[1] depth=5521
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_1_out0_stream[12];
     #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream[1] depth=2
@@ -106,67 +106,67 @@ void resnet20(hls::stream<ap_axiu<128, 0, 0, 0>>& global_in, hls::stream<ap_axiu
     #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream[10] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream[11] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_1_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[0] depth=130
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[2] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[3] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[4] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[5] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[6] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[7] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[8] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[9] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[10] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[0] depth=513
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[1] depth=529
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[2] depth=529
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[3] depth=481
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[4] depth=273
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[5] depth=274
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[6] depth=274
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[7] depth=241
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[8] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[9] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[10] depth=19
     #pragma HLS STREAM variable=StreamingLineBuffer_1_out0_stream_prepad[11] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_1_buffer_stream[10];
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[0] depth=32
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[1] depth=17
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[2] depth=241
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[3] depth=258
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[4] depth=34
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[5] depth=14
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[6] depth=238
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[7] depth=254
-    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[8] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[0] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[1] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[7] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_1_buffer_stream[9] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingConv_1_out0_stream[2];
     #pragma HLS STREAM variable=StreamingConv_1_out0_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingConv_1_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_2_out0_stream[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[0] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[1] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[2] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[3] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[4] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[5] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[6] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[7] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[8] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[9] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[10] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[11] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[0] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[1] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[7] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[8] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[9] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[10] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream[11] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_2_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[0] depth=86
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[1] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[2] depth=79
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[3] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[4] depth=79
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[5] depth=70
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[6] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[7] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[8] depth=16
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[9] depth=8
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[10] depth=10
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[11] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[0] depth=257
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[1] depth=265
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[2] depth=265
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[3] depth=241
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[4] depth=137
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[5] depth=138
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[6] depth=138
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[7] depth=121
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[8] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[9] depth=9
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[10] depth=11
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_out0_stream_prepad[11] depth=3
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_2_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[2] depth=58
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[3] depth=60
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[4] depth=18
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[5] depth=6
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[6] depth=118
-    #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[7] depth=126
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[7] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_2_buffer_stream[9] depth=2
     hls::stream<std::array<ap_int<8>, 1>> StreamingConv_2_out0_stream[2];
@@ -179,83 +179,83 @@ void resnet20(hls::stream<ap_axiu<128, 0, 0, 0>>& global_in, hls::stream<ap_axiu
     #pragma HLS STREAM variable=TensorDuplicator_1_out0_stream[0] depth=2
     #pragma HLS STREAM variable=TensorDuplicator_1_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> TensorDuplicator_1_out1_stream[2];
-    #pragma HLS STREAM variable=TensorDuplicator_1_out1_stream[0] depth=592
-    #pragma HLS STREAM variable=TensorDuplicator_1_out1_stream[1] depth=592
+    #pragma HLS STREAM variable=TensorDuplicator_1_out1_stream[0] depth=593
+    #pragma HLS STREAM variable=TensorDuplicator_1_out1_stream[1] depth=593
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_3_out0_stream[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[0] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[1] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[2] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[3] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[4] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[5] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[6] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[7] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[8] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[9] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[10] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[11] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[0] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[1] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[2] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[3] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[4] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[5] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[6] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[7] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[8] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[9] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[10] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream[11] depth=255
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_3_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[0] depth=109
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[1] depth=93
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[2] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[3] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[4] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[5] depth=77
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[6] depth=93
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[7] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[8] depth=32
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[9] depth=16
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[10] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[0] depth=513
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[1] depth=529
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[2] depth=529
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[3] depth=481
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[4] depth=273
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[5] depth=274
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[6] depth=274
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[7] depth=241
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[8] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[9] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[10] depth=19
     #pragma HLS STREAM variable=StreamingLineBuffer_3_out0_stream_prepad[11] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_3_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[2] depth=179
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[3] depth=181
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[4] depth=34
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[5] depth=14
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[6] depth=238
-    #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[7] depth=254
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[7] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_3_buffer_stream[9] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingConv_3_out0_stream[2];
     #pragma HLS STREAM variable=StreamingConv_3_out0_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingConv_3_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_4_out0_stream[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[0] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[1] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[2] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[3] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[4] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[5] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[6] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[7] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[8] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[9] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[10] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[11] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[0] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[1] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[7] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[8] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[9] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[10] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream[11] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_4_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[0] depth=86
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[1] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[2] depth=79
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[3] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[4] depth=79
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[5] depth=70
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[6] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[7] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[8] depth=16
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[9] depth=8
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[10] depth=10
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[11] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[0] depth=257
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[1] depth=265
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[2] depth=265
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[3] depth=241
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[4] depth=137
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[5] depth=138
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[6] depth=138
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[7] depth=121
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[8] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[9] depth=9
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[10] depth=11
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_out0_stream_prepad[11] depth=3
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_4_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[2] depth=58
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[3] depth=60
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[4] depth=18
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[5] depth=6
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[6] depth=118
-    #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[7] depth=126
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[7] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_4_buffer_stream[9] depth=2
     hls::stream<std::array<ap_int<8>, 1>> StreamingConv_4_out0_stream[2];
@@ -268,83 +268,83 @@ void resnet20(hls::stream<ap_axiu<128, 0, 0, 0>>& global_in, hls::stream<ap_axiu
     #pragma HLS STREAM variable=TensorDuplicator_2_out0_stream[0] depth=2
     #pragma HLS STREAM variable=TensorDuplicator_2_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> TensorDuplicator_2_out1_stream[2];
-    #pragma HLS STREAM variable=TensorDuplicator_2_out1_stream[0] depth=592
-    #pragma HLS STREAM variable=TensorDuplicator_2_out1_stream[1] depth=592
+    #pragma HLS STREAM variable=TensorDuplicator_2_out1_stream[0] depth=593
+    #pragma HLS STREAM variable=TensorDuplicator_2_out1_stream[1] depth=593
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_5_out0_stream[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[0] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[1] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[2] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[3] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[4] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[5] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[6] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[7] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[8] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[9] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[10] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[11] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[0] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[1] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[2] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[3] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[4] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[5] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[6] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[7] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[8] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[9] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[10] depth=255
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream[11] depth=255
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_5_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[0] depth=109
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[1] depth=93
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[2] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[3] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[4] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[5] depth=77
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[6] depth=93
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[7] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[8] depth=32
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[9] depth=16
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[10] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[0] depth=513
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[1] depth=529
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[2] depth=529
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[3] depth=481
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[4] depth=273
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[5] depth=274
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[6] depth=274
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[7] depth=241
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[8] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[9] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[10] depth=19
     #pragma HLS STREAM variable=StreamingLineBuffer_5_out0_stream_prepad[11] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_5_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[2] depth=179
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[3] depth=181
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[4] depth=34
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[5] depth=14
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[6] depth=238
-    #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[7] depth=254
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[7] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_5_buffer_stream[9] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingConv_5_out0_stream[2];
     #pragma HLS STREAM variable=StreamingConv_5_out0_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingConv_5_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_6_out0_stream[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[0] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[1] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[2] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[3] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[4] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[5] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[6] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[7] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[8] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[9] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[10] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[11] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[0] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[1] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[7] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[8] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[9] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[10] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream[11] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_6_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[0] depth=86
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[1] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[2] depth=79
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[3] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[4] depth=79
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[5] depth=70
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[6] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[7] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[8] depth=16
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[9] depth=8
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[10] depth=10
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[11] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[0] depth=257
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[1] depth=265
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[2] depth=265
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[3] depth=241
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[4] depth=137
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[5] depth=138
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[6] depth=138
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[7] depth=121
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[8] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[9] depth=9
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[10] depth=11
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_out0_stream_prepad[11] depth=3
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_6_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[2] depth=58
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[3] depth=60
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[4] depth=18
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[5] depth=6
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[6] depth=118
-    #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[7] depth=126
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[7] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_6_buffer_stream[9] depth=2
     hls::stream<std::array<ap_int<8>, 1>> StreamingConv_6_out0_stream[2];
@@ -360,35 +360,35 @@ void resnet20(hls::stream<ap_axiu<128, 0, 0, 0>>& global_in, hls::stream<ap_axiu
     #pragma HLS STREAM variable=TensorDuplicator_3_out1_stream[0] depth=2
     #pragma HLS STREAM variable=TensorDuplicator_3_out1_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_7_out0_stream[15];
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[0] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[1] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[2] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[3] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[4] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[5] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[6] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[7] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[8] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[9] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[10] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[11] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[12] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[13] depth=71
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[14] depth=71
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[0] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[1] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[2] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[3] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[4] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[5] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[6] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[7] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[8] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[9] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[10] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[11] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[12] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[13] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream[14] depth=72
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_7_out0_stream_prepad[15];
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[0] depth=127
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[1] depth=142
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[2] depth=135
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[3] depth=127
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[4] depth=127
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[5] depth=112
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[6] depth=128
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[7] depth=128
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[8] depth=128
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[9] depth=128
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[10] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[11] depth=16
-    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[12] depth=16
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[0] depth=128
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[1] depth=143
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[2] depth=143
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[3] depth=128
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[4] depth=128
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[5] depth=113
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[6] depth=129
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[7] depth=129
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[8] depth=129
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[9] depth=129
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[10] depth=16
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[11] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[12] depth=17
     #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[13] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_7_out0_stream_prepad[14] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_7_buffer_stream[13];
@@ -406,52 +406,52 @@ void resnet20(hls::stream<ap_axiu<128, 0, 0, 0>>& global_in, hls::stream<ap_axiu
     #pragma HLS STREAM variable=StreamingLineBuffer_7_buffer_stream[11] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_7_buffer_stream[12] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_8_out0_stream[3];
-    #pragma HLS STREAM variable=StreamingLineBuffer_8_out0_stream[0] depth=22
-    #pragma HLS STREAM variable=StreamingLineBuffer_8_out0_stream[1] depth=22
-    #pragma HLS STREAM variable=StreamingLineBuffer_8_out0_stream[2] depth=14
+    #pragma HLS STREAM variable=StreamingLineBuffer_8_out0_stream[0] depth=23
+    #pragma HLS STREAM variable=StreamingLineBuffer_8_out0_stream[1] depth=23
+    #pragma HLS STREAM variable=StreamingLineBuffer_8_out0_stream[2] depth=15
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_8_buffer_stream[1];
     #pragma HLS STREAM variable=StreamingLineBuffer_8_buffer_stream[0] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingConv_7_out0_stream[2];
     #pragma HLS STREAM variable=StreamingConv_7_out0_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingConv_7_out0_stream[1] depth=2
     hls::stream<std::array<ap_int<8>, 2>> StreamingConv_8_out0_stream[2];
-    #pragma HLS STREAM variable=StreamingConv_8_out0_stream[0] depth=289
-    #pragma HLS STREAM variable=StreamingConv_8_out0_stream[1] depth=289
+    #pragma HLS STREAM variable=StreamingConv_8_out0_stream[0] depth=293
+    #pragma HLS STREAM variable=StreamingConv_8_out0_stream[1] depth=293
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_9_out0_stream[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[0] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[1] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[2] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[3] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[4] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[5] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[6] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[7] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[8] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[9] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[10] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[11] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[0] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[1] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[2] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[3] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[4] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[5] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[6] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[7] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[8] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[9] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[10] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream[11] depth=302
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_9_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[0] depth=157
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[1] depth=125
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[2] depth=126
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[3] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[4] depth=126
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[5] depth=93
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[6] depth=125
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[7] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[8] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[9] depth=32
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[10] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[0] depth=513
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[1] depth=545
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[2] depth=545
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[3] depth=449
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[4] depth=289
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[5] depth=290
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[6] depth=290
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[7] depth=225
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[8] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[9] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[10] depth=35
     #pragma HLS STREAM variable=StreamingLineBuffer_9_out0_stream_prepad[11] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_9_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[2] depth=163
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[3] depth=165
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[4] depth=66
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[5] depth=30
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[6] depth=222
-    #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[7] depth=254
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[7] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_9_buffer_stream[9] depth=2
     hls::stream<std::array<ap_int<8>, 2>> StreamingConv_9_out0_stream[2];
@@ -464,83 +464,83 @@ void resnet20(hls::stream<ap_axiu<128, 0, 0, 0>>& global_in, hls::stream<ap_axiu
     #pragma HLS STREAM variable=TensorDuplicator_4_out0_stream[0] depth=2
     #pragma HLS STREAM variable=TensorDuplicator_4_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> TensorDuplicator_4_out1_stream[2];
-    #pragma HLS STREAM variable=TensorDuplicator_4_out1_stream[0] depth=336
-    #pragma HLS STREAM variable=TensorDuplicator_4_out1_stream[1] depth=336
+    #pragma HLS STREAM variable=TensorDuplicator_4_out1_stream[0] depth=337
+    #pragma HLS STREAM variable=TensorDuplicator_4_out1_stream[1] depth=337
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_10_out0_stream[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[0] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[1] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[2] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[3] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[4] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[5] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[6] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[7] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[8] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[9] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[10] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[11] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[0] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[1] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[2] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[3] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[4] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[5] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[6] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[7] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[8] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[9] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[10] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream[11] depth=158
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_10_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[0] depth=110
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[1] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[2] depth=95
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[3] depth=79
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[4] depth=95
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[5] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[6] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[7] depth=79
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[8] depth=32
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[9] depth=16
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[10] depth=18
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[0] depth=257
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[1] depth=273
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[2] depth=273
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[3] depth=225
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[4] depth=145
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[5] depth=146
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[6] depth=146
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[7] depth=113
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[8] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[9] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[10] depth=19
     #pragma HLS STREAM variable=StreamingLineBuffer_10_out0_stream_prepad[11] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_10_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[2] depth=50
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[3] depth=52
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[4] depth=34
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[5] depth=14
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[6] depth=110
-    #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[7] depth=126
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[7] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_10_buffer_stream[9] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingConv_10_out0_stream[2];
     #pragma HLS STREAM variable=StreamingConv_10_out0_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingConv_10_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_11_out0_stream[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[0] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[1] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[2] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[3] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[4] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[5] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[6] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[7] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[8] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[9] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[10] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[11] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[0] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[1] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[2] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[3] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[4] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[5] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[6] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[7] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[8] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[9] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[10] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream[11] depth=302
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_11_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[0] depth=157
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[1] depth=125
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[2] depth=126
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[3] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[4] depth=126
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[5] depth=93
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[6] depth=125
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[7] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[8] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[9] depth=32
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[10] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[0] depth=513
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[1] depth=545
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[2] depth=545
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[3] depth=449
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[4] depth=289
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[5] depth=290
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[6] depth=290
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[7] depth=225
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[8] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[9] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[10] depth=35
     #pragma HLS STREAM variable=StreamingLineBuffer_11_out0_stream_prepad[11] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_11_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[2] depth=163
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[3] depth=165
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[4] depth=66
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[5] depth=30
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[6] depth=222
-    #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[7] depth=254
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[7] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_11_buffer_stream[9] depth=2
     hls::stream<std::array<ap_int<8>, 2>> StreamingConv_11_out0_stream[2];
@@ -553,129 +553,129 @@ void resnet20(hls::stream<ap_axiu<128, 0, 0, 0>>& global_in, hls::stream<ap_axiu
     #pragma HLS STREAM variable=TensorDuplicator_5_out0_stream[0] depth=2
     #pragma HLS STREAM variable=TensorDuplicator_5_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> TensorDuplicator_5_out1_stream[2];
-    #pragma HLS STREAM variable=TensorDuplicator_5_out1_stream[0] depth=336
-    #pragma HLS STREAM variable=TensorDuplicator_5_out1_stream[1] depth=336
+    #pragma HLS STREAM variable=TensorDuplicator_5_out1_stream[0] depth=337
+    #pragma HLS STREAM variable=TensorDuplicator_5_out1_stream[1] depth=337
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_12_out0_stream[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[0] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[1] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[2] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[3] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[4] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[5] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[6] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[7] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[8] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[9] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[10] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[11] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[0] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[1] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[2] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[3] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[4] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[5] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[6] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[7] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[8] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[9] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[10] depth=158
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream[11] depth=158
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_12_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[0] depth=110
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[1] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[2] depth=95
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[3] depth=79
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[4] depth=95
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[5] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[6] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[7] depth=79
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[8] depth=32
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[9] depth=16
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[10] depth=18
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[0] depth=257
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[1] depth=273
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[2] depth=273
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[3] depth=225
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[4] depth=145
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[5] depth=146
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[6] depth=146
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[7] depth=113
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[8] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[9] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[10] depth=19
     #pragma HLS STREAM variable=StreamingLineBuffer_12_out0_stream_prepad[11] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_12_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[2] depth=50
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[3] depth=52
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[4] depth=34
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[5] depth=14
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[6] depth=110
-    #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[7] depth=126
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[7] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_12_buffer_stream[9] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingConv_12_out0_stream[2];
     #pragma HLS STREAM variable=StreamingConv_12_out0_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingConv_12_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_13_out0_stream[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[0] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[1] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[2] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[3] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[4] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[5] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[6] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[7] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[8] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[9] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[10] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[11] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[0] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[1] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[2] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[3] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[4] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[5] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[6] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[7] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[8] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[9] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[10] depth=302
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream[11] depth=302
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_13_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[0] depth=157
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[1] depth=125
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[2] depth=126
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[3] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[4] depth=126
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[5] depth=93
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[6] depth=125
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[7] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[8] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[9] depth=32
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[10] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[0] depth=513
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[1] depth=545
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[2] depth=545
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[3] depth=449
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[4] depth=289
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[5] depth=290
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[6] depth=290
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[7] depth=225
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[8] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[9] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[10] depth=35
     #pragma HLS STREAM variable=StreamingLineBuffer_13_out0_stream_prepad[11] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_13_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[2] depth=163
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[3] depth=165
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[4] depth=66
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[5] depth=30
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[6] depth=222
-    #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[7] depth=254
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[7] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_13_buffer_stream[9] depth=2
     hls::stream<std::array<ap_int<8>, 2>> StreamingConv_13_out0_stream[2];
-    #pragma HLS STREAM variable=StreamingConv_13_out0_stream[0] depth=2
-    #pragma HLS STREAM variable=StreamingConv_13_out0_stream[1] depth=2
+    #pragma HLS STREAM variable=StreamingConv_13_out0_stream[0] depth=3
+    #pragma HLS STREAM variable=StreamingConv_13_out0_stream[1] depth=3
     hls::stream<std::array<ap_uint<8>, 2>> StreamingAdd_5_out0_stream[2];
-    #pragma HLS STREAM variable=StreamingAdd_5_out0_stream[0] depth=2
-    #pragma HLS STREAM variable=StreamingAdd_5_out0_stream[1] depth=2
+    #pragma HLS STREAM variable=StreamingAdd_5_out0_stream[0] depth=3
+    #pragma HLS STREAM variable=StreamingAdd_5_out0_stream[1] depth=3
     hls::stream<std::array<ap_uint<8>, 2>> TensorDuplicator_6_out0_stream[2];
-    #pragma HLS STREAM variable=TensorDuplicator_6_out0_stream[0] depth=2
-    #pragma HLS STREAM variable=TensorDuplicator_6_out0_stream[1] depth=2
+    #pragma HLS STREAM variable=TensorDuplicator_6_out0_stream[0] depth=3
+    #pragma HLS STREAM variable=TensorDuplicator_6_out0_stream[1] depth=3
     hls::stream<std::array<ap_uint<8>, 2>> TensorDuplicator_6_out1_stream[2];
     #pragma HLS STREAM variable=TensorDuplicator_6_out1_stream[0] depth=2
     #pragma HLS STREAM variable=TensorDuplicator_6_out1_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_14_out0_stream[15];
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[0] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[1] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[2] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[3] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[4] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[5] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[6] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[7] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[8] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[9] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[10] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[11] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[12] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[13] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[14] depth=15
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[0] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[1] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[7] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[8] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[9] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[10] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[11] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[12] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[13] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream[14] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_14_out0_stream_prepad[15];
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[0] depth=63
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[1] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[2] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[3] depth=63
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[4] depth=63
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[5] depth=48
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[6] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[7] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[8] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[9] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[10] depth=15
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[11] depth=16
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[12] depth=16
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[13] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[14] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[0] depth=64
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[1] depth=79
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[2] depth=79
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[3] depth=64
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[4] depth=64
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[5] depth=49
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[6] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[7] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[8] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[9] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[10] depth=16
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[11] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[12] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[13] depth=3
+    #pragma HLS STREAM variable=StreamingLineBuffer_14_out0_stream_prepad[14] depth=3
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_14_buffer_stream[13];
     #pragma HLS STREAM variable=StreamingLineBuffer_14_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_14_buffer_stream[1] depth=2
@@ -691,131 +691,131 @@ void resnet20(hls::stream<ap_axiu<128, 0, 0, 0>>& global_in, hls::stream<ap_axiu
     #pragma HLS STREAM variable=StreamingLineBuffer_14_buffer_stream[11] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_14_buffer_stream[12] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_15_out0_stream[3];
-    #pragma HLS STREAM variable=StreamingLineBuffer_15_out0_stream[0] depth=22
-    #pragma HLS STREAM variable=StreamingLineBuffer_15_out0_stream[1] depth=22
-    #pragma HLS STREAM variable=StreamingLineBuffer_15_out0_stream[2] depth=14
+    #pragma HLS STREAM variable=StreamingLineBuffer_15_out0_stream[0] depth=23
+    #pragma HLS STREAM variable=StreamingLineBuffer_15_out0_stream[1] depth=23
+    #pragma HLS STREAM variable=StreamingLineBuffer_15_out0_stream[2] depth=15
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_15_buffer_stream[1];
     #pragma HLS STREAM variable=StreamingLineBuffer_15_buffer_stream[0] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingConv_14_out0_stream[2];
     #pragma HLS STREAM variable=StreamingConv_14_out0_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingConv_14_out0_stream[1] depth=2
     hls::stream<std::array<ap_int<8>, 1>> StreamingConv_15_out0_stream[2];
-    #pragma HLS STREAM variable=StreamingConv_15_out0_stream[0] depth=640
-    #pragma HLS STREAM variable=StreamingConv_15_out0_stream[1] depth=640
+    #pragma HLS STREAM variable=StreamingConv_15_out0_stream[0] depth=641
+    #pragma HLS STREAM variable=StreamingConv_15_out0_stream[1] depth=641
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_16_out0_stream[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[0] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[1] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[2] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[3] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[4] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[5] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[6] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[7] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[8] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[9] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[10] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[11] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[0] depth=240
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[1] depth=240
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[2] depth=240
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[3] depth=240
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[4] depth=240
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[5] depth=240
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[6] depth=240
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[7] depth=240
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[8] depth=240
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[9] depth=240
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[10] depth=240
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream[11] depth=240
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_16_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[0] depth=166
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[1] depth=182
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[2] depth=183
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[3] depth=151
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[4] depth=160
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[5] depth=150
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[6] depth=169
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[7] depth=104
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[8] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[9] depth=40
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[10] depth=40
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[0] depth=257
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[1] depth=289
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[2] depth=289
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[3] depth=193
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[4] depth=161
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[5] depth=162
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[6] depth=162
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[7] depth=97
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[8] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[9] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[10] depth=35
     #pragma HLS STREAM variable=StreamingLineBuffer_16_out0_stream_prepad[11] depth=2
     hls::stream<std::array<ap_uint<8>, 2>> StreamingLineBuffer_16_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[1] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[2] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[3] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[4] depth=19
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[4] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[5] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[6] depth=62
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[7] depth=105
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[8] depth=95
-    #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[9] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[7] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[8] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_16_buffer_stream[9] depth=2
     hls::stream<std::array<ap_int<8>, 1>> StreamingConv_16_out0_stream[2];
     #pragma HLS STREAM variable=StreamingConv_16_out0_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingConv_16_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingAdd_6_out0_stream[2];
-    #pragma HLS STREAM variable=StreamingAdd_6_out0_stream[0] depth=46
-    #pragma HLS STREAM variable=StreamingAdd_6_out0_stream[1] depth=46
+    #pragma HLS STREAM variable=StreamingAdd_6_out0_stream[0] depth=2
+    #pragma HLS STREAM variable=StreamingAdd_6_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> TensorDuplicator_7_out0_stream[2];
     #pragma HLS STREAM variable=TensorDuplicator_7_out0_stream[0] depth=2
     #pragma HLS STREAM variable=TensorDuplicator_7_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> TensorDuplicator_7_out1_stream[2];
-    #pragma HLS STREAM variable=TensorDuplicator_7_out1_stream[0] depth=769
-    #pragma HLS STREAM variable=TensorDuplicator_7_out1_stream[1] depth=769
+    #pragma HLS STREAM variable=TensorDuplicator_7_out1_stream[0] depth=818
+    #pragma HLS STREAM variable=TensorDuplicator_7_out1_stream[1] depth=818
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_17_out0_stream[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[0] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[1] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[2] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[3] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[4] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[5] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[6] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[7] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[8] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[9] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[10] depth=72
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[11] depth=72
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[0] depth=363
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[1] depth=363
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[2] depth=363
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[3] depth=363
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[4] depth=363
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[5] depth=363
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[6] depth=363
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[7] depth=363
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[8] depth=363
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[9] depth=363
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[10] depth=363
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream[11] depth=363
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_17_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[0] depth=192
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[1] depth=187
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[2] depth=188
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[3] depth=124
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[4] depth=188
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[5] depth=123
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[6] depth=187
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[7] depth=124
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[8] depth=128
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[9] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[10] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[0] depth=513
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[1] depth=577
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[2] depth=577
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[3] depth=385
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[4] depth=321
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[5] depth=322
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[6] depth=322
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[7] depth=193
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[8] depth=129
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[9] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[10] depth=67
     #pragma HLS STREAM variable=StreamingLineBuffer_17_out0_stream_prepad[11] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_17_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[2] depth=133
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[3] depth=135
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[4] depth=127
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[5] depth=62
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[6] depth=190
-    #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[7] depth=254
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[7] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_17_buffer_stream[9] depth=2
     hls::stream<std::array<ap_uint<8>, 4>> StreamingConv_17_out0_stream[2];
     #pragma HLS STREAM variable=StreamingConv_17_out0_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingConv_17_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 4>> StreamingLineBuffer_18_out0_stream[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[0] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[2] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[3] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[4] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[5] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[6] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[7] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[8] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[9] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[10] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[11] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[0] depth=96
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[1] depth=96
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[2] depth=96
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[3] depth=96
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[4] depth=96
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[5] depth=96
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[6] depth=96
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[7] depth=96
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[8] depth=96
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[9] depth=96
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[10] depth=96
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream[11] depth=96
     hls::stream<std::array<ap_uint<8>, 4>> StreamingLineBuffer_18_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[0] depth=95
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[1] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[2] depth=95
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[3] depth=79
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[4] depth=80
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[5] depth=78
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[6] depth=81
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[7] depth=48
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[8] depth=32
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[9] depth=16
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[10] depth=18
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[0] depth=129
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[1] depth=145
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[2] depth=145
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[3] depth=97
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[4] depth=81
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[5] depth=82
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[6] depth=82
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[7] depth=49
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[8] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[9] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[10] depth=19
     #pragma HLS STREAM variable=StreamingLineBuffer_18_out0_stream_prepad[11] depth=2
     hls::stream<std::array<ap_uint<8>, 4>> StreamingLineBuffer_18_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_18_buffer_stream[0] depth=2
@@ -824,24 +824,24 @@ void resnet20(hls::stream<ap_axiu<128, 0, 0, 0>>& global_in, hls::stream<ap_axiu
     #pragma HLS STREAM variable=StreamingLineBuffer_18_buffer_stream[3] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_18_buffer_stream[4] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_18_buffer_stream[5] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_buffer_stream[6] depth=30
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_buffer_stream[7] depth=49
-    #pragma HLS STREAM variable=StreamingLineBuffer_18_buffer_stream[8] depth=47
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_buffer_stream[7] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_18_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_18_buffer_stream[9] depth=2
     hls::stream<std::array<ap_int<8>, 1>> StreamingConv_18_out0_stream[2];
-    #pragma HLS STREAM variable=StreamingConv_18_out0_stream[0] depth=2
-    #pragma HLS STREAM variable=StreamingConv_18_out0_stream[1] depth=2
+    #pragma HLS STREAM variable=StreamingConv_18_out0_stream[0] depth=3
+    #pragma HLS STREAM variable=StreamingConv_18_out0_stream[1] depth=3
     hls::stream<std::array<ap_uint<8>, 1>> StreamingAdd_7_out0_stream[2];
-    #pragma HLS STREAM variable=StreamingAdd_7_out0_stream[0] depth=66
-    #pragma HLS STREAM variable=StreamingAdd_7_out0_stream[1] depth=66
+    #pragma HLS STREAM variable=StreamingAdd_7_out0_stream[0] depth=2
+    #pragma HLS STREAM variable=StreamingAdd_7_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> TensorDuplicator_8_out0_stream[2];
     #pragma HLS STREAM variable=TensorDuplicator_8_out0_stream[0] depth=2
     #pragma HLS STREAM variable=TensorDuplicator_8_out0_stream[1] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> TensorDuplicator_8_out1_stream[2];
-    #pragma HLS STREAM variable=TensorDuplicator_8_out1_stream[0] depth=2
-    #pragma HLS STREAM variable=TensorDuplicator_8_out1_stream[1] depth=129
+    #pragma HLS STREAM variable=TensorDuplicator_8_out1_stream[0] depth=65
+    #pragma HLS STREAM variable=TensorDuplicator_8_out1_stream[1] depth=67
     hls::stream<std::array<ap_uint<8>, 1>> BandwidthAdjustDecreaseStreams_0_out0_stream[1];
-    #pragma HLS STREAM variable=BandwidthAdjustDecreaseStreams_0_out0_stream[0] depth=1473
+    #pragma HLS STREAM variable=BandwidthAdjustDecreaseStreams_0_out0_stream[0] depth=2241
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_19_out0_stream[12];
     #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream[1] depth=2
@@ -856,34 +856,34 @@ void resnet20(hls::stream<ap_axiu<128, 0, 0, 0>>& global_in, hls::stream<ap_axiu
     #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream[10] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream[11] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_19_out0_stream_prepad[12];
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[0] depth=192
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[1] depth=187
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[2] depth=188
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[3] depth=124
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[4] depth=188
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[5] depth=123
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[6] depth=187
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[7] depth=124
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[8] depth=128
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[9] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[10] depth=65
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[11] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[0] depth=513
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[1] depth=577
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[2] depth=577
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[3] depth=385
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[4] depth=321
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[5] depth=322
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[6] depth=322
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[7] depth=193
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[8] depth=129
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[9] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[10] depth=67
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_out0_stream_prepad[11] depth=3
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_19_buffer_stream[10];
     #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[2] depth=133
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[3] depth=135
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[4] depth=127
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[5] depth=62
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[6] depth=190
-    #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[7] depth=254
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[2] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[6] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[7] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[8] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_19_buffer_stream[9] depth=2
     hls::stream<std::array<ap_uint<8>, 4>> StreamingConv_19_out0_stream[2];
-    #pragma HLS STREAM variable=StreamingConv_19_out0_stream[0] depth=2
-    #pragma HLS STREAM variable=StreamingConv_19_out0_stream[1] depth=16
+    #pragma HLS STREAM variable=StreamingConv_19_out0_stream[0] depth=3
+    #pragma HLS STREAM variable=StreamingConv_19_out0_stream[1] depth=17
     hls::stream<std::array<ap_uint<8>, 4>> BandwidthAdjustDecreaseStreams_1_out0_stream[1];
-    #pragma HLS STREAM variable=BandwidthAdjustDecreaseStreams_1_out0_stream[0] depth=2
+    #pragma HLS STREAM variable=BandwidthAdjustDecreaseStreams_1_out0_stream[0] depth=3
     hls::stream<std::array<ap_uint<8>, 4>> StreamingLineBuffer_20_out0_stream[9];
     #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream[0] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream[1] depth=2
@@ -895,91 +895,91 @@ void resnet20(hls::stream<ap_axiu<128, 0, 0, 0>>& global_in, hls::stream<ap_axiu
     #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream[7] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream[8] depth=2
     hls::stream<std::array<ap_uint<8>, 4>> StreamingLineBuffer_20_out0_stream_prepad[9];
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[0] depth=110
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[1] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[2] depth=95
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[3] depth=95
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[4] depth=94
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[5] depth=95
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[6] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[7] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[8] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[0] depth=257
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[1] depth=273
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[2] depth=225
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[3] depth=145
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[4] depth=146
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[5] depth=113
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[6] depth=33
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[7] depth=17
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_out0_stream_prepad[8] depth=3
     hls::stream<std::array<ap_uint<8>, 4>> StreamingLineBuffer_20_buffer_stream[8];
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[0] depth=16
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[1] depth=16
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[0] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[1] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[2] depth=2
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[3] depth=34
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[4] depth=14
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[5] depth=110
-    #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[6] depth=79
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[3] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[4] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[5] depth=2
+    #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[6] depth=2
     #pragma HLS STREAM variable=StreamingLineBuffer_20_buffer_stream[7] depth=2
     hls::stream<std::array<ap_int<8>, 1>> StreamingConv_20_out0_stream[1];
     #pragma HLS STREAM variable=StreamingConv_20_out0_stream[0] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingAdd_8_out0_stream[1];
     #pragma HLS STREAM variable=StreamingAdd_8_out0_stream[0] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_21_out0_stream[64];
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[0] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[1] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[2] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[3] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[4] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[5] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[6] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[7] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[8] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[9] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[10] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[11] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[12] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[13] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[14] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[15] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[16] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[17] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[18] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[19] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[20] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[21] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[22] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[23] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[24] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[25] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[26] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[27] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[28] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[29] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[30] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[31] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[32] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[33] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[34] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[35] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[36] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[37] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[38] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[39] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[40] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[41] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[42] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[43] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[44] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[45] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[46] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[47] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[48] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[49] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[50] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[51] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[52] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[53] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[54] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[55] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[56] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[57] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[58] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[59] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[60] depth=64
-    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[61] depth=64
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[0] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[1] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[2] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[3] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[4] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[5] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[6] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[7] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[8] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[9] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[10] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[11] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[12] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[13] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[14] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[15] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[16] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[17] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[18] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[19] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[20] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[21] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[22] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[23] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[24] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[25] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[26] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[27] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[28] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[29] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[30] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[31] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[32] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[33] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[34] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[35] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[36] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[37] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[38] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[39] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[40] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[41] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[42] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[43] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[44] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[45] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[46] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[47] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[48] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[49] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[50] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[51] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[52] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[53] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[54] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[55] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[56] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[57] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[58] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[59] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[60] depth=65
+    #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[61] depth=65
     #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[62] depth=64
     #pragma HLS STREAM variable=StreamingLineBuffer_21_out0_stream[63] depth=2
     hls::stream<std::array<ap_uint<8>, 1>> StreamingLineBuffer_21_buffer_stream[63];

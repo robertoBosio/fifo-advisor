@@ -23,10 +23,10 @@ int main(int argc, char** argv)
     std::string file_global_out = argv[2];
     hls::stream<ap_axiu<128, 0, 0, 0>> global_out;
     txt_to_hls_stream<ap_axiu<128, 0, 0, 0>, ap_int<8>, char>(file_global_in, global_in, 16);
-    txt_to_hls_stream<ap_axiu<128, 0, 0, 0>, ap_int<8>, char>(file_global_in, global_in, 16);
-    txt_to_hls_stream<ap_axiu<128, 0, 0, 0>, ap_int<8>, char>(file_global_in, global_in, 16);
+    // txt_to_hls_stream<ap_axiu<128, 0, 0, 0>, ap_int<8>, char>(file_global_in, global_in, 16);
+    // txt_to_hls_stream<ap_axiu<128, 0, 0, 0>, ap_int<8>, char>(file_global_in, global_in, 16);
     resnet20(global_in, global_out);
-    resnet20(global_in, global_out);
-    resnet20(global_in, global_out);
+    // resnet20(global_in, global_out);
+    // resnet20(global_in, global_out);
     return 0;
 }

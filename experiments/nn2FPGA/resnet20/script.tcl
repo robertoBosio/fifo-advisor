@@ -1,6 +1,6 @@
 # script.tcl robust path handling for include dirs
 
-set type "streaming_group-sa"
+set type "streaming_heuristic"
 
 # Resolve paths relative to this script's directory
 set script_dir  [file dirname [file normalize [info script]]]

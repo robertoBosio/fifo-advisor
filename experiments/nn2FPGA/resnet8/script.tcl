@@ -1,6 +1,6 @@
 # script.tcl robust path handling for include dirs
 
-set type "stream_group-sa"
+set type "stream_heuristic"
 
 # Resolve paths relative to this script's directory
 set script_dir  [file dirname [file normalize [info script]]]
@@ -14,7 +14,7 @@ set proj_name   "resnet8_${type}_HLS_project"
 set sol_name    "solution_0"
 
 # Create/clean project & solution
-open_project $proj_name
+open_project -reset $proj_name
 set_top resnet8
 add_files $kernel_cpp  -cflags [format {-I%s} $inc_dir]
 add_files -tb $tb_cpp  -cflags [format {-I%s} $inc_dir]
@@ -29,7 +29,7 @@ config_compile -pipeline_style flp
 
 # Run the usual flow (spellings below are the canonical commands)
 #csim_design -argv "data/global_in.txt data/global_in_1.txt data/global_out.txt"
-#csynth_design
+csynth_design
 #cosim_design -argv "data/global_in.txt data/global_in_1.txt data/global_out.txt"
 export_design -flow syn
 

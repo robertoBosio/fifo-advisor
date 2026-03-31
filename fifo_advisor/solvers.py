@@ -501,7 +501,7 @@ class DiscreteSimulatedAnnealingOptimizer(FIFOOptimizer):
             base_depths = {}
             for fifo, fifo_io in self.sim_env.simulation_base.fifo_io.items():
                 fifo_id = fifo.id
-                base_depths[fifo_id] = max(fifo_io.get_observed_depth(), 2)
+                base_depths[fifo_id] = max(fifo_io.get_observed_depth() + 1, 2)
             x0 = np.array(
                 [
                     self.fifos_dse_space[fifo_id].index(
@@ -1083,13 +1083,14 @@ class HeuristicOptimizer(FIFOOptimizer):
         starting_time = time.perf_counter()
         crossed = False
         eval_results_final = None
+        map_id_to_name = {fifo.id: fifo.name for fifo in self.sim_env.fifos}
         for level in self.level_sets:
             print(f"Running heuristic optimization for level: {level}...")
 
             base_depths = {}
             for fifo, fifo_io in self.sim_env.simulation_base.fifo_io.items():
                 fifo_id = fifo.id
-                base_depths[fifo_id] = max(fifo_io.get_observed_depth(), 2)
+                base_depths[fifo_id] = max(fifo_io.get_observed_depth() + 1, 2)
             eval_results = self.sim_env.eval_solution_single(base_depths)
             assert not eval_results.deadlock
 
@@ -1129,7 +1130,7 @@ class HeuristicOptimizer(FIFOOptimizer):
                 assert eval_results_case.latency is not None
                 # if eval_results_case.latency > base_latency * 1.01:
                 #     continue
-                if eval_results_case.latency > base_latency:
+                if eval_results_case.latency > base_latency + 10:
                     continue
                 
                 if not crossed:
@@ -1157,6 +1158,19 @@ class HeuristicOptimizer(FIFOOptimizer):
             )
             assert not eval_results_final.deadlock
             best_eval = eval_results_final
+            
+            report_lines = []
+            for fifo_id in working_set_of_depths:
+                if working_set_of_depths[fifo_id] < base_depths[fifo_id]:
+                    report_lines.append((
+                        map_id_to_name[fifo_id],
+                        base_depths[fifo_id],
+                        working_set_of_depths[fifo_id],
+                    ))
+            report_lines.sort(key=lambda x: x[0], reverse=True)
+            print("Final FIFO depths (only showing reductions):")
+            for name, base_d, final_d in report_lines:
+                print(f"  {name}: {base_d} -> {final_d}")
         
         if not crossed:
             best_eval.cross_time = np.inf
@@ -1172,13 +1186,14 @@ class BisectionOptimizer(FIFOOptimizer):
         starting_time = time.perf_counter()
         crossed = False
         eval_results_final = None
+        map_id_to_name = {fifo.id: fifo.name for fifo in self.sim_env.fifos}
         for level in self.level_sets:
             print(f"Running bisection optimization for level: {level}...")
 
             base_depths = {}
             for fifo, fifo_io in self.sim_env.simulation_base.fifo_io.items():
                 fifo_id = fifo.id
-                base_depths[fifo_id] = max(fifo_io.get_observed_depth(), 2)
+                base_depths[fifo_id] = max(fifo_io.get_observed_depth() + 1, 2)
             eval_results = self.sim_env.eval_solution_single(base_depths)
             assert not eval_results.deadlock
 
@@ -1238,7 +1253,7 @@ class BisectionOptimizer(FIFOOptimizer):
                         eval_results_case.cross_time = eval_results_final.cross_time
 
                     print(
-                        f"Reducing FIFO {fifo_id} depth from {prev_depth} to {new_sample[fifo_id]} "
+                        f"Reducing FIFO {map_id_to_name[fifo_id]} depth from {prev_depth} to {new_sample[fifo_id]} "
                         f"accepted: latency {eval_results_case.latency} "
                     )
                     working_set_of_depths[fifo_id] = new_sample[fifo_id]
@@ -1267,6 +1282,19 @@ class BisectionOptimizer(FIFOOptimizer):
             )
             assert not eval_results_final.deadlock
             best_eval = eval_results_final
+
+            report_lines = []
+            for fifo_id in working_set_of_depths:
+                if working_set_of_depths[fifo_id] < base_depths[fifo_id]:
+                    report_lines.append((
+                        map_id_to_name[fifo_id],
+                        base_depths[fifo_id],
+                        working_set_of_depths[fifo_id],
+                    ))
+            report_lines.sort(key=lambda x: x[0], reverse=True)
+            print("Final FIFO depths (only showing reductions):")
+            for name, base_d, final_d in report_lines:
+                print(f"  {name}: {base_d} -> {final_d}")
 
         if not crossed:
             best_eval.cross_time = np.inf
