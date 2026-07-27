@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import argparse
-from datetime import date, datetime
+from datetime import datetime
 import enum
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
-from time import time
 from typing import Any
-
-from matplotlib.pylab import pareto
 
 from fifo_advisor.opt_env import (
     EvalResult,
@@ -37,15 +35,15 @@ class SolverSpec:
 SOLVER_SPECS: dict[str, SolverSpec] = {
     "random": SolverSpec(
         cls=RandomSearchOptimizer,
-        allowed_kwargs={"n_samples", "seed", "cross_value"},
+        allowed_kwargs={"n_samples", "seed"},
     ),
     "group-random": SolverSpec(
         cls=GroupRandomSearchOptimizer,
-        allowed_kwargs={"n_samples", "seed", "cross_value"},
+        allowed_kwargs={"n_samples", "seed"},
     ),
     "heuristic": SolverSpec(
         cls=HeuristicOptimizer,
-        allowed_kwargs={'cross_value'},
+        allowed_kwargs={"cross_value"},
     ),
     "sa": SolverSpec(
         cls=DiscreteSimulatedAnnealingOptimizer,
@@ -144,6 +142,17 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Write optimizer evaluations to this JSON file (default: fifo_advisor_results.json).",
     )
+    parser.add_argument(
+        "--report-observed-depths",
+        action="store_true",
+        help="Write starting-vs-observed FIFO depth/memory report and exit without optimization.",
+    )
+    parser.add_argument(
+        "--fifo-depth-overrides",
+        type=Path,
+        default=None,
+        help="JSON file with manual FIFO depth overrides for known LightningSim false-deadlock cases.",
+    )
     return parser
 
 
@@ -159,7 +168,7 @@ def collect_solver_kwargs(
         "maxfun": args.maxfun,
         "n_scaling_factors": args.n_scaling_factors,
         "round_type": args.round_type,
-        "cross_value": args.cross_value,
+        "cross_value": args.cross_value if args.cross_value != 0 else None,
     }
 
     solver_kwargs: dict[str, Any] = {}
@@ -205,14 +214,105 @@ def fifo_id_to_name_map_from_env(sim_env: LSEnv) -> dict[int, str]:
     return fifo_id_to_name
 
 
+def load_fifo_depth_overrides(path: Path | None) -> list[dict[str, Any]]:
+    if path is None:
+        return []
+
+    payload = json.loads(path.read_text())
+    if isinstance(payload, list):
+        return payload
+    if isinstance(payload, dict):
+        overrides = payload.get("overrides", [])
+        if isinstance(overrides, list):
+            return overrides
+    raise ValueError(
+        "FIFO depth override file must be a JSON list or an object with an 'overrides' list."
+    )
+
+
+def build_start_vs_observed_fifo_memory_report(sim_env: LSEnv) -> dict[str, Any]:
+    original_depths = sim_env.original_fifo_depths
+    effective_depths = sim_env.trace_base.params.fifo_depths
+    observed_depths = {
+        fifo.id: fifo_io.get_observed_depth()
+        for fifo, fifo_io in sim_env.simulation_base.fifo_io.items()
+    }
+
+    original_bytes = sim_env.evaluate_fifo_memory(original_depths)
+    effective_bytes = sim_env.evaluate_fifo_memory(effective_depths)
+    observed_bytes = sim_env.evaluate_fifo_memory(observed_depths)
+
+    per_fifo: list[dict[str, Any]] = []
+    for fifo in sim_env.fifos:
+        fid = fifo.id
+        original_depth = original_depths.get(fid)
+        effective_depth = effective_depths.get(fid)
+        observed_depth = observed_depths.get(fid)
+        if original_depth is None and effective_depth is None and observed_depth is None:
+            continue
+
+        w = fifo.width if fifo.width != 0 else 8
+        wb = math.ceil(w / 8)
+        adjusted_depth = max(observed_depth + 1, 2) if observed_depth is not None else None
+        original_memory = original_depth * wb if original_depth is not None else 0
+        effective_memory = effective_depth * wb if effective_depth is not None else 0
+        observed_memory = observed_depth * wb if observed_depth is not None else 0
+        adjusted_memory = adjusted_depth * wb if adjusted_depth is not None else None
+        per_fifo.append(
+            {
+                "id": fid,
+                "name": fifo.name,
+                "width_bits": fifo.width,
+                "width_bytes": wb,
+                "original_starting_depth": original_depth,
+                "effective_starting_depth": effective_depth,
+                "observed_depth": observed_depth,
+                "adjusted_depth": adjusted_depth,
+                "original_starting_memory_bytes": original_memory,
+                "effective_starting_memory_bytes": effective_memory,
+                "observed_memory_bytes": observed_memory,
+                "adjusted_memory_bytes": adjusted_memory,
+            }
+        )
+
+    def reduction_percent(start_bytes: int) -> float:
+        if start_bytes == 0:
+            return 0.0
+        return (start_bytes - observed_bytes) / start_bytes * 100
+
+    return {
+        "report": "start_vs_observed_fifo_memory",
+        "aggregate": {
+            "original_starting_memory_bytes": original_bytes,
+            "effective_starting_memory_bytes": effective_bytes,
+            "observed_memory_bytes": observed_bytes,
+            "reduction_from_original_bytes": original_bytes - observed_bytes,
+            "reduction_from_effective_bytes": effective_bytes - observed_bytes,
+            "reduction_from_original_percent": reduction_percent(original_bytes),
+            "reduction_from_effective_percent": reduction_percent(effective_bytes),
+        },
+        "manual_depth_overrides": sim_env.fifo_depth_overrides_applied,
+        "per_fifo": per_fifo,
+    }
+
+
 def main(args: argparse.Namespace) -> None:
     solution_dir: Path = args.solution_dir
-    sim_env = LSEnv(solution_dir)
+    fifo_depth_overrides = load_fifo_depth_overrides(args.fifo_depth_overrides)
+    sim_env = LSEnv(solution_dir, fifo_depth_overrides=fifo_depth_overrides)
     fifo_id_to_name_map = fifo_id_to_name_map_from_env(sim_env)
+    baseline_report = build_start_vs_observed_fifo_memory_report(sim_env)
+
+    if args.report_observed_depths:
+        emit_results(baseline_report, args.output)
+        return
+
     solver_cls, solver_kwargs = collect_solver_kwargs(args)
     optimizer = solver_cls(sim_env, **solver_kwargs)
     results = optimizer.solve()
-    serialized = serialize_eval_results(results, fifo_id_to_name_map, solver_kwargs)
+    serialized = serialize_eval_results(
+        results, fifo_id_to_name_map, solver_kwargs, baseline_report
+    )
     emit_results(serialized, args.output)
 
 
@@ -237,7 +337,10 @@ def huristic_score(latency, bram, base_latency, base_bram, alpha):
 
 
 def serialize_eval_results(
-    results: list[EvalResult], fifo_id_to_name_map: dict[int, str], solver_kwargs: dict[str, Any]
+    results: list[EvalResult],
+    fifo_id_to_name_map: dict[int, str],
+    solver_kwargs: dict[str, Any],
+    baseline_report: dict[str, Any],
 ) -> dict[str, Any]:
     payload = {}
     payload["fifo_id_to_name_map"] = {
@@ -261,10 +364,11 @@ def serialize_eval_results(
     #     for result in pareto_results
     # ]
 
-    payload['args'] = {
+    payload["args"] = {
         key: (value.name if isinstance(value, enum.Enum) else value)
         for key, value in solver_kwargs.items()
     }
+    payload["baseline_report"] = baseline_report
     result = results[0]
     payload["evaluations"] = {
         "fifo_sizes": {
@@ -288,8 +392,8 @@ def serialize_eval_results(
         "byte_usage_total": result.byte_usage_total,
         "timestamp": result.timestamp,
         # "is_pareto_optimal": is_pareto,
-        "dse_time": f"{result.end_time:.6f}",
-        "cross_time": f"{result.cross_time:.6f}",
+        "dse_time": result.end_time,
+        "cross_time": result.cross_time,
     }
     
     return payload
@@ -305,8 +409,10 @@ def cli() -> None:
     parser = build_parser()
     args = parser.parse_args()
     if args.output is None:
-        # Add date and time to output filename
-        args.output = Path(f"{args.solver}_fifo_advisor_{datetime.now().strftime('%Y%m%d-%H%M%S')}.json")
+        mode = "observed_depths" if args.report_observed_depths else args.solver
+        args.output = Path(
+            f"{mode}_fifo_advisor_{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
+        )
     try:
         main(args)
     except ValueError as exc:

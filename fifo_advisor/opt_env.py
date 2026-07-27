@@ -6,7 +6,7 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, TypeVar
+from typing import Any, Callable, TypeVar
 
 import numpy as np
 from lightningsim.model import Solution
@@ -24,8 +24,8 @@ class EvalResult:
     byte_usage_total: int | None = None
 
     timestamp: float | None = None
-    cross_time : float | None = None
-    end_time : float | None = None
+    cross_time: float | None = None
+    end_time: float | None = None
 
 
 EvalResults = list[EvalResult]
@@ -37,38 +37,21 @@ class LSEnv:
         self,
         vitis_hls_solution_dir: Path,
         min_fifo_size: int = 2,
-        env_vars_extra: dict[str, str] = {},
+        env_vars_extra: dict[str, str] | None = None,
+        fifo_depth_overrides: list[dict[str, Any]] | None = None,
     ):
         self.vitis_hls_solution_dir = vitis_hls_solution_dir
         self.min_fifo_size = min_fifo_size
-        self.env_vars_extra = env_vars_extra
+        self.env_vars_extra = env_vars_extra or {}
+        self.fifo_depth_overrides = fifo_depth_overrides or []
+        self.fifo_depth_overrides_applied: list[dict[str, Any]] = []
 
-        for key, value in env_vars_extra.items():
+        for key, value in self.env_vars_extra.items():
             os.environ[key] = value
 
         try:
             with open(os.path.join(vitis_hls_solution_dir, "trace.pkl"), "rb") as f:
                 self.trace_base: ResolvedTrace = pickle.load(f)
-                # self.simulation_base = self.trace_base.compiled.execute(self.trace_base.params)
-                # eval_results = self.eval_solution_single(self.trace_base.params.fifo_depths)
-                # print(f"Starting memory: {self.evaluate_fifo_memory(self.trace_base.params.fifo_depths)} bytes. Starting latency: {eval_results.latency}.")
-                # base_latency = eval_results.latency
-                # new_sample_fifo_depths = self.trace_base.params.fifo_depths.copy()
-                # for fifo_id, depth in self.trace_base.params.fifo_depths.items():
-
-                #     # new_sample_fifo_depths[fifo_id] = max(self.trace_base.compiled.get_fifo_design_space([fifo_id], 8)[-1], depth)
-                #     new_sample_fifo_depths[fifo_id] = depth + 100000
-                #     self.trace_base.params.fifo_depths = new_sample_fifo_depths
-                #     print(f"FIFO {fifo_id}: depth {depth} → {new_sample_fifo_depths[fifo_id]}")
-                #     if (fifo_id % 20 == 0):
-                #         self.simulation_base = self.trace_base.compiled.execute(self.trace_base.params)
-                #         eval_results = self.eval_solution_single(new_sample_fifo_depths)
-                #         if eval_results.latency > base_latency:
-                #             print(f"Latency increased to {eval_results.latency} after increasing FIFO {fifo_id} depth to {new_sample_fifo_depths[fifo_id]}. Reverting change.")
-                #             exit()
-                #     # new_sample_fifo_depths[fifo_id] = depth
-                # exit()
-                # self.trace_base.params.fifo_depths = new_sample_fifo_depths
                 print("Loaded trace from pickle file.")
 
         except FileNotFoundError:
@@ -110,6 +93,9 @@ class LSEnv:
                 pickle.dump(self.trace_base, f)
                 print("Saved trace to pickle file.")
 
+        self.original_fifo_depths = self.trace_base.params.fifo_depths.copy()
+        self.apply_fifo_depth_overrides()
+
         self.simulation_base = self.trace_base.compiled.execute(self.trace_base.params)
 
         self.fifos = self.trace_base.fifos
@@ -121,6 +107,40 @@ class LSEnv:
             fifo_depth: int | None = self.trace_base.params.fifo_depths[fifo_id]
             self.fifo_sizes_base[fifo_id] = fifo_depth
 
+    def apply_fifo_depth_overrides(self) -> None:
+        if not self.fifo_depth_overrides:
+            return
+
+        fifo_depths = self.trace_base.params.fifo_depths.copy()
+        for override in self.fifo_depth_overrides:
+            fifo_id = int(override["fifo_id"])
+            if fifo_id not in fifo_depths:
+                raise ValueError(f"FIFO depth override references unknown FIFO ID {fifo_id}.")
+
+            original_depth = fifo_depths[fifo_id]
+            if "depth" in override:
+                new_depth = int(override["depth"])
+            elif "delta" in override:
+                new_depth = original_depth + int(override["delta"])
+            else:
+                raise ValueError(
+                    f"FIFO depth override for FIFO ID {fifo_id} must define 'depth' or 'delta'."
+                )
+
+            new_depth = max(new_depth, self.min_fifo_size)
+            fifo_depths[fifo_id] = new_depth
+            self.fifo_depth_overrides_applied.append(
+                {
+                    "fifo_id": fifo_id,
+                    "original_depth": original_depth,
+                    "effective_depth": new_depth,
+                    "delta": new_depth - original_depth,
+                    "reason": override.get("reason"),
+                }
+            )
+
+        self.trace_base.params.fifo_depths = fifo_depths
+
     def evaluate_fifo_memory(self, x: dict[int, int]) -> int:
         """Compute total FIFO memory usage in bytes given depths (None=∞ → ignored)."""
         import math
@@ -129,7 +149,10 @@ class LSEnv:
             d = x.get(fifo.id, None)
             if d is None:
                 continue
-            width_bytes = math.ceil(fifo.width / 8)
+            fifo_width = fifo.width
+            if fifo.width == 0:
+                fifo_width = 8
+            width_bytes = math.ceil(fifo_width / 8)
             total += d * width_bytes
         return total
 
